@@ -48,10 +48,19 @@ class TestCmdline(unittest.TestCase):
         test_dir = os.path.dirname(os.path.realpath(__file__))
         test_file = os.path.join(test_dir, "test_files", "simple.out")
         with tempfile.TemporaryDirectory() as tmp_dir:
-            ret = subprocess.call(['report-converter', '-t', 'golint',
-                                   '-o', tmp_dir, test_file, '--meta',
-                                   'analyzer_version=' + analyzer_version,
-                                   'analyzer_command=' + analyzer_command])
+            ret = subprocess.call(
+                [
+                    'report-converter',
+                    '-t',
+                    'golint',
+                    '-o',
+                    tmp_dir,
+                    test_file,
+                    '--meta',
+                    f'analyzer_version={analyzer_version}',
+                    f'analyzer_command={analyzer_command}',
+                ]
+            )
             self.assertEqual(0, ret)
 
             self.assertEqual(

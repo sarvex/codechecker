@@ -35,8 +35,16 @@ class product_urlTest(unittest.TestCase):
         Whole product URL understanding.
         """
         def test(host, port, name, protocol=None):
-            url = ''.join([protocol + "://" if protocol else "",
-                           host, ":", str(port), "/", name])
+            url = ''.join(
+                [
+                    f"{protocol}://" if protocol else "",
+                    host,
+                    ":",
+                    str(port),
+                    "/",
+                    name,
+                ]
+            )
 
             sprotocol, shost, sport, sname = split_product_url(url)
             self.assertEqual(sprotocol, expected_protocol(protocol, port))
@@ -57,7 +65,7 @@ class product_urlTest(unittest.TestCase):
         Understanding only a product name specified.
         """
         def test(name, protocol=None):
-            url = ''.join([protocol + "://" if protocol else "", name])
+            url = ''.join([f"{protocol}://" if protocol else "", name])
 
             sprotocol, shost, sport, sname = split_product_url(url)
             self.assertEqual(sprotocol, expected_protocol(protocol, None))
@@ -75,8 +83,7 @@ class product_urlTest(unittest.TestCase):
         Understanding a host and a product name specified.
         """
         def test(host, name, protocol=None):
-            url = ''.join([protocol + "://" if protocol else "",
-                           host, "/", name])
+            url = ''.join([f"{protocol}://" if protocol else "", host, "/", name])
 
             sprotocol, shost, sport, sname = split_product_url(url)
             self.assertEqual(sprotocol, expected_protocol(protocol, None))
@@ -126,8 +133,7 @@ class product_urlTest(unittest.TestCase):
         Whole server URL understanding.
         """
         def test(host, port, protocol=None):
-            url = ''.join([protocol + "://" if protocol else "",
-                           host, ":", str(port)])
+            url = ''.join([f"{protocol}://" if protocol else "", host, ":", str(port)])
 
             sprotocol, shost, sport = split_server_url(url)
             self.assertEqual(sprotocol, expected_protocol(protocol, port))
@@ -141,13 +147,13 @@ class product_urlTest(unittest.TestCase):
         test("very-secure.another.server", 443, 'https')
 
         sprotocol, shost, sport = \
-            split_server_url('https://someserver:1234/Product')
+                split_server_url('https://someserver:1234/Product')
         self.assertEqual(sprotocol, 'https')
         self.assertEqual(shost, 'someserver')
         self.assertEqual(sport, 1234)
 
         sprotocol, shost, sport = \
-            split_server_url('http://[::1]:1234/Product')
+                split_server_url('http://[::1]:1234/Product')
         self.assertEqual(sprotocol, 'http')
         self.assertEqual(shost, '[::1]')
         self.assertEqual(sport, 1234)
@@ -157,7 +163,7 @@ class product_urlTest(unittest.TestCase):
         Understanding only a hostname specified for server URLs.
         """
         def test(host, protocol=None):
-            url = ''.join([protocol + "://" if protocol else "", host])
+            url = ''.join([f"{protocol}://" if protocol else "", host])
 
             sprotocol, shost, sport = split_server_url(url)
             self.assertEqual(sprotocol, expected_protocol(protocol, None))

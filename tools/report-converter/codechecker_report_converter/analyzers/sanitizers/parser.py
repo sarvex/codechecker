@@ -74,10 +74,7 @@ class SANParser(BaseParser):
     ) -> Tuple[List[Report], str]:
         """ Parse the given line. """
         report, next_line = self.parse_sanitizer_message(it, line)
-        if report:
-            return [report], next_line
-
-        return [], next(it)
+        return ([report], next_line) if report else ([], next(it))
 
     def parse_stack_trace_line(self, line: str) -> Optional[BugPathEvent]:
         """ Parse the given stack trace line.
@@ -146,8 +143,7 @@ class SANParser(BaseParser):
         stack_traces: List[str] = []
 
         while line.strip():
-            event = self.parse_stack_trace_line(line)
-            if event:
+            if event := self.parse_stack_trace_line(line):
                 events.append(event)
 
             stack_traces.append(line)

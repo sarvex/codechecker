@@ -54,13 +54,14 @@ class AnalyzerResult(AnalyzerResultBase):
                 LOG.warning("Source file does not exists: %s", file_path)
                 continue
 
-            for bug in diag.get('messages', []):
-                reports.append(Report(
-                    get_or_create_file(
-                        os.path.abspath(file_path), file_cache),
+            reports.extend(
+                Report(
+                    get_or_create_file(os.path.abspath(file_path), file_cache),
                     int(bug['line']),
                     int(bug['column']),
                     bug['message'],
-                    bug['ruleId']))
-
+                    bug['ruleId'],
+                )
+                for bug in diag.get('messages', [])
+            )
         return reports

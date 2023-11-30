@@ -54,8 +54,7 @@ class SkipListHandler:
         """
         for skip_line in skip_lines:
             norm_skip_path = os.path.normpath(skip_line[1:].strip())
-            rexpr = re.compile(
-                fnmatch.translate(norm_skip_path + '*'))
+            rexpr = re.compile(fnmatch.translate(f'{norm_skip_path}*'))
             self.__skip.append((skip_line, rexpr))
 
     def __check_line_format(self, skip_lines):
@@ -97,11 +96,10 @@ class SkipListHandler:
         if not self.__skip:
             return False
 
-        for line, rexpr in self.__skip:
-            if rexpr.match(source):
-                sign = line[0]
-                return sign == '-'
-        return False
+        return next(
+            (line[0] == '-' for line, rexpr in self.__skip if rexpr.match(source)),
+            False,
+        )
 
     def __call__(self, source_file_path: str) -> bool:
         """

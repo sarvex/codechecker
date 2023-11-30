@@ -22,8 +22,7 @@ def get_default_workspace():
     """
     Default workspace in the users home directory.
     """
-    workspace = os.path.join(os.path.expanduser("~"), '.codechecker')
-    return workspace
+    return os.path.join(os.path.expanduser("~"), '.codechecker')
 
 
 def get_password_file():
@@ -81,11 +80,10 @@ def extend(path_env_extra, ld_lib_path_extra):
 
     if path_env_extra:
         extra_path = ':'.join(path_env_extra)
-        LOG.debug_analyzer(
-            'Extending PATH environment variable with: ' + extra_path)
+        LOG.debug_analyzer(f'Extending PATH environment variable with: {extra_path}')
 
         try:
-            new_env['PATH'] = extra_path + ':' + new_env['PATH']
+            new_env['PATH'] = f'{extra_path}:' + new_env['PATH']
         except KeyError:
             new_env['PATH'] = extra_path
 
@@ -96,8 +94,7 @@ def extend(path_env_extra, ld_lib_path_extra):
             extra_lib)
         try:
             original_ld_library_path = new_env['LD_LIBRARY_PATH']
-            new_env['LD_LIBRARY_PATH'] = \
-                extra_lib + ':' + original_ld_library_path
+            new_env['LD_LIBRARY_PATH'] = f'{extra_lib}:{original_ld_library_path}'
         except KeyError:
             new_env['LD_LIBRARY_PATH'] = extra_lib
 

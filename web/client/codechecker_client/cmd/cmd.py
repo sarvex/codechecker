@@ -43,7 +43,7 @@ def valid_time(t):
 
     try:
         parts = list(map(int, t.split(':')))
-        parts = parts + [0] * (6 - len(parts))
+        parts += [0] * (6 - len(parts))
         year, month, day, hour, minute, second = parts
         return datetime.datetime(year, month, day, hour, minute, second)
     except ValueError as ex:
@@ -837,8 +837,10 @@ def __register_products(parser):
                 that are present in the invocation argv."""
                 matched_args = []
                 for option in options:
-                    if any([arg if option.startswith(arg) else None
-                            for arg in sys.argv[1:]]):
+                    if any(
+                        arg if option.startswith(arg) else None
+                        for arg in sys.argv[1:]
+                    ):
                         matched_args.append(option)
                         continue
 
@@ -853,16 +855,15 @@ def __register_products(parser):
             psql_args_matching = arg_match(options)
             if any(psql_args_matching) and \
                     'postgresql' not in args:
-                first_matching_arg = next(iter([match for match
-                                                in psql_args_matching]))
+                first_matching_arg = next(iter(list(psql_args_matching)))
                 parser.error("argument {0}: not allowed without argument "
                              "--postgresql".format(first_matching_arg))
-                # parser.error() terminates with return code 2.
+                            # parser.error() terminates with return code 2.
 
             # Some arguments get a dynamic default value that depends on the
             # value of another argument.
             if args.sqlite == SQLITE_PRODUCT_ENDPOINT_DEFAULT_VAR:
-                args.sqlite = args.endpoint + '.sqlite'
+                args.sqlite = f'{args.endpoint}.sqlite'
 
             if args.dbusername == PGSQL_PRODUCT_ENDPOINT_DEFAULT_VAR:
                 args.dbusername = args.endpoint

@@ -14,6 +14,7 @@ invoked and ran.
 """
 
 
+
 import argparse
 import os
 
@@ -24,7 +25,7 @@ from codechecker_analyzer.buildlog.host_check import check_ldlogger
 from codechecker_common import arg, logger
 
 
-epilog_env_var = f"""
+epilog_env_var = """
   CC_LOGGER_ABS_PATH       If the environment variable is defined, all relative
                            paths in the compilation commands after '-I,
                            -idirafter, -imultilib, -iquote, -isysroot -isystem,

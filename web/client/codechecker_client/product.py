@@ -25,7 +25,7 @@ def __strip_protocol_from_url(url):
 
     parts = url.split('://', 1)
     protocol = parts[0]
-    url = url.replace(parts[0] + '://', '').lstrip('/').rstrip('/')
+    url = url.replace(f'{parts[0]}://', '').lstrip('/').rstrip('/')
 
     return protocol, url
 

@@ -52,10 +52,9 @@ class Parser(BaseParser):
         """ Parse the given line. """
         match = self.message_line_re.match(line)
 
-        checker_match = self.checker_name_re.match(line)
-        if checker_match:
+        if checker_match := self.checker_name_re.match(line):
             self.checker_name = 'coccinelle.' + \
-                checker_match.group('checker_name')
+                    checker_match.group('checker_name')
 
         if match is None:
             return [], next(it)

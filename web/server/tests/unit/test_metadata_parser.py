@@ -112,11 +112,12 @@ class MetadataInfoParserTest(unittest.TestCase):
     """ Testing metadata parser. """
 
     @classmethod
-    def setup_class(self):
+    def setup_class(cls):
         """ Initialize test files. """
         # Already generated plist files for the tests.
-        self.__metadata_test_files = os.path.join(
-            os.path.dirname(__file__), 'metadata_test_files')
+        cls.__metadata_test_files = os.path.join(
+            os.path.dirname(__file__), 'metadata_test_files'
+        )
 
     def test_metadata_info_v1(self):
         """ Get metadata info for old version format json file. """

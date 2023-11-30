@@ -13,20 +13,19 @@ def clangsa(label_file):
     r = http.request('GET', url)
     root = ET.fromstring(r.data)
 
-    checker_anchors = []
-    for x in root.findall('.//{*}a[@title="Permalink to this headline"]'):
-        checker_anchors.append(x.attrib['href'].lstrip('#'))
-
+    checker_anchors = [
+        x.attrib['href'].lstrip('#')
+        for x in root.findall('.//{*}a[@title="Permalink to this headline"]')
+    ]
     with open(label_file) as f:
         checkers = json.load(f)['labels'].keys()
 
     docs = {}
     for checker in checkers:
         c = checker.lower().replace('.', '-')
-        anchor = next(filter(
-            lambda anchor: anchor.startswith(c), checker_anchors), None)
-
-        if anchor:
+        if anchor := next(
+            filter(lambda anchor: anchor.startswith(c), checker_anchors), None
+        ):
             docs[checker] = f'{url}#{anchor}'
 
     return docs
@@ -39,20 +38,20 @@ def clang_tidy(label_file):
     r = http.request('GET', url)
     root = ET.fromstring(r.data)
 
-    checker_anchors = []
-    for x in root.findall('.//{*}a[@class="reference external"]'):
-        checker_anchors.append(x.attrib['href'])
-
+    checker_anchors = [
+        x.attrib['href']
+        for x in root.findall('.//{*}a[@class="reference external"]')
+    ]
     with open(label_file) as f:
         checkers = json.load(f)['labels'].keys()
 
     url = url[:url.rfind('/') + 1]
     docs = {}
     for checker in checkers:
-        anchor = next(filter(
-            lambda anchor: anchor.startswith(checker), checker_anchors), None)
-
-        if anchor:
+        if anchor := next(
+            filter(lambda anchor: anchor.startswith(checker), checker_anchors),
+            None,
+        ):
             docs[checker] = f'{url}{anchor}'
 
     return docs

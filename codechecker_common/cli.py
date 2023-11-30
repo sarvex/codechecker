@@ -59,25 +59,15 @@ def add_subcommand(subparsers, sub_cmd, cmd_module_path, lib_dir_path):
 
 def get_data_files_dir_path():
     """ Get data files directory path """
-    bin_dir = os.environ.get('CC_BIN_DIR')
-
-    # In case of internal package we return the parent directory of the 'bin'
-    # folder.
-    if bin_dir:
+    if bin_dir := os.environ.get('CC_BIN_DIR'):
         return os.path.dirname(bin_dir)
 
     # If this is a pip-installed package, try to find the data directory.
     import sysconfig
     data_dir_paths = [
-        # Try to find the data directory beside the lib directory.
-        # /usr/local/lib/python3.8/dist-packages/codechecker_common/cli.py
-        # (this file) -> /usr/local
         os.path.abspath(os.path.join(__file__, *[os.path.pardir] * 5)),
-
-        # Automatically try to find data directory if it can be found in
-        # standard locations.
-        *set(sysconfig.get_path("data", s)
-             for s in sysconfig.get_scheme_names())]
+        *{sysconfig.get_path("data", s) for s in sysconfig.get_scheme_names()},
+    ]
 
     for dir_path in data_dir_paths:
         data_dir_path = os.path.join(dir_path, 'share', 'codechecker')
@@ -215,13 +205,10 @@ output.
             args.func(args)
 
     except KeyboardInterrupt as kb_err:
-        print(str(kb_err))
+        print(kb_err)
         print("Interrupted by user...")
         sys.exit(1)
 
-    # Handle all exception, but print stacktrace. It is needed for atexit.
-    # atexit does not work correctly when an unhandled exception occurred.
-    # So in this case, the servers left running when the script exited.
     except Exception:
         import traceback
         traceback.print_exc(file=sys.stdout)

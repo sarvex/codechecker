@@ -59,10 +59,7 @@ def split_to_list(arguments):
     """
     Split argument string to list
     """
-    if type(arguments) is list:
-        return arguments
-    else:
-        return shlex.split(arguments)
+    return arguments if type(arguments) is list else shlex.split(arguments)
 
 
 def run_command(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE):
@@ -97,7 +94,7 @@ def bazel_aquery(build_arguments):
             configs.append(argument)
     logging.debug("Targets: %s", targets)
     logging.debug("Configs: %s", configs)
-    if len(targets) < 1:
+    if not targets:
         logging.error(
             "No targets found for bazel query in: %s",
             build_arguments)
@@ -120,10 +117,8 @@ def bazel_aquery(build_arguments):
         configs=" ".join(configs))
     logging.debug("Command: %s", command)
 
-    out = run_command(command)
-    if out:
-        data = json.loads(out)
-        return data
+    if out := run_command(command):
+        return json.loads(out)
 
 
 def get_compile_commands(data,
@@ -222,10 +217,10 @@ def run(build_command, output_file_name):
         logging.error("No output file is specified")
         return False
 
-    bazel_info = split_to_list(build_command)[0] + " info "
-    bazel_workspace = run_command(bazel_info + "workspace").rstrip()
-    bazel_output_base = run_command(bazel_info + "output_base").rstrip()
-    bazel_execution_root = run_command(bazel_info + "execution_root").rstrip()
+    bazel_info = f"{split_to_list(build_command)[0]} info "
+    bazel_workspace = run_command(f"{bazel_info}workspace").rstrip()
+    bazel_output_base = run_command(f"{bazel_info}output_base").rstrip()
+    bazel_execution_root = run_command(f"{bazel_info}execution_root").rstrip()
 
     bazel_work_dir = bazel_execution_root.replace("/execroot/", "/external/")
     if not os.path.exists(bazel_work_dir):

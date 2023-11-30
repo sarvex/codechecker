@@ -94,7 +94,7 @@ class BasicLoggerTest(unittest.TestCase):
             self.logger_file,
             self.binary_file,
             self.logger_debug_file,
-            self.logger_debug_file + ".lock",
+            f"{self.logger_debug_file}.lock",
         ]
         for file in tmp_files:
             try:

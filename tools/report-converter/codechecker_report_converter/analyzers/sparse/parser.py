@@ -77,8 +77,7 @@ class Parser(BaseParser):
         line = ''
         try:
             line = next(it)
-            note_match = self.note_line_re.match(line)
-            while note_match:
+            while note_match := self.note_line_re.match(line):
                 file_path = os.path.normpath(
                     os.path.join(os.path.dirname(self.analyzer_result),
                                  note_match.group('path')))
@@ -90,7 +89,6 @@ class Parser(BaseParser):
                     int(note_match.group('column'))))
 
                 line = next(it)
-                note_match = self.note_line_re.match(line)
         except StopIteration:
             line = ''
         finally:

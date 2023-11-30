@@ -71,7 +71,7 @@ def unzip(b64zip: str, output_dir: str) -> int:
     to a temporary directory and the ZIP is then deleted. The function returns
     the size of the extracted decompressed zip file.
     """
-    if len(b64zip) == 0:
+    if not b64zip:
         return 0
 
     with tempfile.NamedTemporaryFile(suffix='.zip') as zip_file:
@@ -177,8 +177,7 @@ def get_blame_file_data(
     tracking_branch = None
 
     if os.path.isfile(blame_file):
-        data = load_json(blame_file)
-        if data:
+        if data := load_json(blame_file):
             remote_url = data.get("remote_url")
             tracking_branch = data.get("tracking_branch")
 
@@ -224,7 +223,7 @@ class MassStoreRun:
         self.__severity_map: Dict[str, int] = {}
         self.__new_report_hashes: Dict[str, Tuple] = {}
         self.__all_report_checkers: Set[str] = set()
-        self.__added_reports: List[Tuple[DBReport, Report]] = list()
+        self.__added_reports: List[Tuple[DBReport, Report]] = []
 
         self.__get_report_limit_for_product()
 
@@ -606,12 +605,11 @@ class MassStoreRun:
                     analyzer_command.encode("utf-8"),
                     zlib.Z_BEST_COMPRESSION)
 
-                analysis_info_rows = session \
-                    .query(AnalysisInfo) \
-                    .filter(AnalysisInfo.analyzer_command == cmd) \
+                if (
+                    analysis_info_rows := session.query(AnalysisInfo)
+                    .filter(AnalysisInfo.analyzer_command == cmd)
                     .all()
-
-                if analysis_info_rows:
+                ):
                     # It is possible when multiple runs are stored
                     # simultaneously to the server with the same analysis
                     # command that multiple entries are stored into the
@@ -638,8 +636,8 @@ class MassStoreRun:
             LOG.debug("Adding run '%s'...", self.__name)
 
             run = session.query(Run) \
-                .filter(Run.name == self.__name) \
-                .one_or_none()
+                    .filter(Run.name == self.__name) \
+                    .one_or_none()
 
             update_run = True
             if run and self.__force:
@@ -683,19 +681,17 @@ class MassStoreRun:
 
             if self.__tag is not None:
                 run_history = session.query(RunHistory) \
-                    .filter(RunHistory.run_id == run_id,
+                        .filter(RunHistory.run_id == run_id,
                             RunHistory.version_tag == self.__tag) \
-                    .one_or_none()
+                        .one_or_none()
 
                 if run_history:
                     run_history.version_tag = None
                     session.add(run_history)
 
-            cc_versions = set()
-            for mip in self.__mips.values():
-                if mip.cc_version:
-                    cc_versions.add(mip.cc_version)
-
+            cc_versions = {
+                mip.cc_version for mip in self.__mips.values() if mip.cc_version
+            }
             cc_version = '; '.join(cc_versions) if cc_versions else None
             run_history = RunHistory(
                 run_id, self.__tag, self.user_name, run_history_time,

@@ -55,7 +55,7 @@ try:
     print('Sending config done.')
 
 except OSError as ex:
-    print("Failed to read config file" + args.config_file)
+    print(f"Failed to read config file{args.config_file}")
     print(ex)
     print(ex.strerror)
 

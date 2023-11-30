@@ -67,9 +67,10 @@ class ThriftProductHandler:
                 args = dict(self.__permission_args)
                 args['config_db_session'] = session
 
-            if not any([permissions.require_permission(
-                            perm, args, self.__auth_session)
-                        for perm in required]):
+            if not any(
+                permissions.require_permission(perm, args, self.__auth_session)
+                for perm in required
+            ):
                 raise codechecker_api_shared.ttypes.RequestFailed(
                     codechecker_api_shared.ttypes.ErrorCode.UNAUTHORIZED,
                     "You are not authorized to execute this action.")
@@ -82,11 +83,11 @@ class ThriftProductHandler:
                                           self.__auth_session):
             return True
 
-        if permissions.require_permission(permissions.PRODUCT_ADMIN, args,
-                                          self.__auth_session):
-            return True
-
-        return False
+        return bool(
+            permissions.require_permission(
+                permissions.PRODUCT_ADMIN, args, self.__auth_session
+            )
+        )
 
     def __get_product(self, session, product):
         """
@@ -280,18 +281,18 @@ class ThriftProductHandler:
 
             # Put together the product configuration.
             descr = convert.to_b64(product.description) \
-                if product.description else None
+                    if product.description else None
 
             is_review_status_change_disabled = \
-                product.is_review_status_change_disabled
+                    product.is_review_status_change_disabled
 
             if product.confidentiality is None:
                 confidentiality = ttypes.Confidentiality.CONFIDENTIAL
             else:
                 confidentiality = \
-                        confidentiality_enum(product.confidentiality)
+                            confidentiality_enum(product.confidentiality)
 
-            prod = ttypes.ProductConfiguration(
+            return ttypes.ProductConfiguration(
                 id=product.id,
                 endpoint=product.endpoint,
                 displayedName_b64=convert.to_b64(product.display_name),
@@ -300,9 +301,8 @@ class ThriftProductHandler:
                 runLimit=product.run_limit,
                 reportLimit=product.report_limit,
                 isReviewStatusChangeDisabled=is_review_status_change_disabled,
-                confidentiality=confidentiality)
-
-            return prod
+                confidentiality=confidentiality,
+            )
 
     @timeit
     def addProduct(self, product):
@@ -476,7 +476,7 @@ class ThriftProductHandler:
 
                 if self.__server.get_product(new_config.endpoint):
                     msg = f"A product endpoint '/{product.endpoint}' is " \
-                          f"already configured!"
+                              f"already configured!"
                     LOG.error(msg)
                     raise codechecker_api_shared.ttypes.RequestFailed(
                         codechecker_api_shared.ttypes.ErrorCode.GENERAL, msg)
@@ -486,10 +486,10 @@ class ThriftProductHandler:
 
             # Some values come encoded as Base64, decode these.
             displayed_name = convert.from_b64(new_config.displayedName_b64) \
-                if new_config.displayedName_b64 \
-                else new_config.endpoint
+                    if new_config.displayedName_b64 \
+                    else new_config.endpoint
             description = convert.from_b64(new_config.description_b64) \
-                if new_config.description_b64 else None
+                    if new_config.description_b64 else None
 
             confidentiality = confidentiality_str(new_config.confidentiality)
 
@@ -534,15 +534,15 @@ class ThriftProductHandler:
                     msg)
 
             conn_str = SQLServer \
-                .from_cmdline_args(conn_str_args, IDENTIFIER, None,
+                    .from_cmdline_args(conn_str_args, IDENTIFIER, None,
                                    False, None).get_connection_string()
 
             # If endpoint or database arguments change, the product
             # configuration has changed so severely, that it needs
             # to be reconnected.
             product_needs_reconnect = \
-                product.endpoint != new_config.endpoint or \
-                product.connection != conn_str
+                    product.endpoint != new_config.endpoint or \
+                    product.connection != conn_str
             old_endpoint = product.endpoint
 
             if product_needs_reconnect:
@@ -551,9 +551,11 @@ class ThriftProductHandler:
                 self.__require_permission([permissions.SUPERUSER])
 
                 # Test if the new database settings are correct or not.
-                dummy_endpoint = new_config.endpoint + '_' + ''.join(
-                    random.sample(new_config.endpoint,
-                                  min(len(new_config.endpoint), 5)))
+                dummy_endpoint = f'{new_config.endpoint}_' + ''.join(
+                    random.sample(
+                        new_config.endpoint, min(len(new_config.endpoint), 5)
+                    )
+                )
                 dummy_prod = Product(
                     endpoint=dummy_endpoint,
                     conn_str=conn_str,
@@ -570,7 +572,7 @@ class ThriftProductHandler:
                 connection_wrapper = self.__server.get_product(dummy_endpoint)
                 if connection_wrapper.last_connection_failure:
                     msg = "The configured connection for '/{0}' failed: {1}" \
-                        .format(new_config.endpoint,
+                            .format(new_config.endpoint,
                                 connection_wrapper.last_connection_failure)
                     LOG.error(msg)
 
@@ -590,7 +592,7 @@ class ThriftProductHandler:
             product.run_limit = new_config.runLimit
             product.report_limit = new_config.reportLimit
             product.is_review_status_change_disabled = \
-                new_config.isReviewStatusChangeDisabled
+                    new_config.isReviewStatusChangeDisabled
             product.connection = conn_str
             product.display_name = displayed_name
             product.description = description

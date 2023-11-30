@@ -37,13 +37,10 @@ def _match_field(line, field):
             return line[1:]
 
         escaped = False
-        if not field:
+        if not field or field[0] != line[0]:
             return None
-        elif field[0] == line[0]:
-            line = line[1:]
-            field = field[1:]
-        else:
-            return None
+        line = line[1:]
+        field = field[1:]
     return None
 
 
@@ -89,10 +86,11 @@ def get_password_from_file(passfile_path, hostname, port, database, username):
         return None
 
     with open(passfile_path, 'r',
-              encoding="utf-8", errors="ignore") as passfile:
+                  encoding="utf-8", errors="ignore") as passfile:
         for line in passfile:
-            pw = _match_line(line.strip(), hostname, port, database, username)
-            if pw:
+            if pw := _match_line(
+                line.strip(), hostname, port, database, username
+            ):
                 return pw
 
     return None

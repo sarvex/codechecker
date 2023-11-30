@@ -74,7 +74,7 @@ def __rewrite_instance_file(append, remove, folder=None):
 
     instance_descriptor_file = __get_instance_descriptor_path(folder)
     with open(instance_descriptor_file, 'r+',
-              encoding="utf-8", errors="ignore") as instance_file:
+                  encoding="utf-8", errors="ignore") as instance_file:
         portalocker.lock(instance_file, portalocker.LOCK_EX)
 
         instances = []
@@ -95,7 +95,7 @@ def __rewrite_instance_file(append, remove, folder=None):
                      if i['pid'] not in append_pids and
                      (i['hostname'] + ":" + str(i['pid'])) not in remove]
 
-        instances = instances + append
+        instances += append
 
         instance_file.seek(0)
         instance_file.truncate()
@@ -123,9 +123,7 @@ def unregister(pid, folder=None):
     descriptor.
     """
 
-    __rewrite_instance_file([],
-                            [socket.gethostname() + ":" + str(pid)],
-                            folder)
+    __rewrite_instance_file([], [f"{socket.gethostname()}:{str(pid)}"], folder)
 
 
 def get_instances(folder=None):

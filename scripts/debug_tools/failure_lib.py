@@ -44,7 +44,7 @@ def change_paths(string, pathModifierFun):
             # Make sure that the prospective output folder exists.
             pattern = re.compile(r'[\s\S]*-o *\Z')
             if pattern.match(string[:i]):
-                out_dir = "./sources-root" + os.path.dirname(path)
+                out_dir = f"./sources-root{os.path.dirname(path)}"
                 if not os.path.isdir(out_dir):
                     os.makedirs(out_dir)
             path = pathModifierFun(path)
@@ -52,7 +52,7 @@ def change_paths(string, pathModifierFun):
             i = path_end - 1
         else:
             result.extend(string[i])
-        i = i + 1
+        i += 1
     return ''.join(result)
 
 
@@ -87,10 +87,7 @@ def get_resource_dir(clang_bin):
                                 )
         out, _ = proc.communicate()
 
-        if proc.returncode == 0:
-            return out.decode("utf-8").rstrip()
-        else:
-            return None
+        return out.decode("utf-8").rstrip() if proc.returncode == 0 else None
     except OSError:
         print('Failed to run: "' + ' '.join(cmd) + '"')
         raise

@@ -67,7 +67,6 @@ def upgrade():
     except Exception as ex:
         LOG.error("Failed to fill product detail columns (num_of_runs, "
                   "latest_storage_date): %s", ex)
-        pass
 
 def downgrade():
     op.drop_column('products', 'num_of_runs')

@@ -55,8 +55,6 @@ class TestCmdline(unittest.TestCase):
 
         test_project = 'cpp'
 
-        test_config = {}
-
         project_info = project.get_info(test_project)
 
         # Copy the test project to the workspace. The tests should
@@ -66,8 +64,7 @@ class TestCmdline(unittest.TestCase):
 
         project_info['project_path'] = test_proj_path
 
-        test_config['test_project'] = project_info
-
+        test_config = {'test_project': project_info}
         suppress_file = None
 
         skip_list_file = None
@@ -83,8 +80,7 @@ class TestCmdline(unittest.TestCase):
             'description': "Runs for command line test."
         }
 
-        ret = project.clean(test_project)
-        if ret:
+        if ret := project.clean(test_project):
             sys.exit(ret)
 
         # Start or connect to the running CodeChecker server and get connection
@@ -100,19 +96,17 @@ class TestCmdline(unittest.TestCase):
         # Generate a unique name for this test run.
         test_project_name_1 = project_info['name'] + '1_' + uuid.uuid4().hex
 
-        ret = codechecker.check_and_store(codechecker_cfg,
-                                          test_project_name_1,
-                                          project.path(test_project))
-        if ret:
+        if ret := codechecker.check_and_store(
+            codechecker_cfg, test_project_name_1, project.path(test_project)
+        ):
             sys.exit(1)
         print("Analyzing the test project was successful.")
 
         test_project_name_2 = project_info['name'] + '2_' + uuid.uuid4().hex
 
-        ret = codechecker.check_and_store(codechecker_cfg,
-                                          test_project_name_2,
-                                          project.path(test_project))
-        if ret:
+        if ret := codechecker.check_and_store(
+            codechecker_cfg, test_project_name_2, project.path(test_project)
+        ):
             sys.exit(1)
         print("Analyzing the test project was successful.")
 
@@ -134,7 +128,7 @@ class TestCmdline(unittest.TestCase):
             'codechecker_cfg']['check_env']
         codechecker.remove_test_package_product(TEST_WORKSPACE, check_env)
 
-        print("Removing: " + TEST_WORKSPACE)
+        print(f"Removing: {TEST_WORKSPACE}")
         shutil.rmtree(TEST_WORKSPACE, ignore_errors=True)
 
     def setup_method(self, method):
@@ -142,7 +136,7 @@ class TestCmdline(unittest.TestCase):
         test_workspace = os.environ.get('TEST_WORKSPACE')
 
         test_class = self.__class__.__name__
-        print('Running ' + test_class + ' tests in ' + test_workspace)
+        print(f'Running {test_class} tests in {test_workspace}')
 
         self.codechecker_cfg = env.import_test_cfg(test_workspace)[
             'codechecker_cfg']
@@ -297,7 +291,7 @@ class TestCmdline(unittest.TestCase):
         # Get the first run.
         run = runs[0]
         run_name = list(run.keys())[0]
-        new_run_name = "updated#@&_" + run_name
+        new_run_name = f"updated#@&_{run_name}"
 
         # Empty string as new name.
         res_cmd = [self._codechecker_cmd, 'cmd', 'update', run_name,

@@ -342,11 +342,10 @@ databases.
         psql_args_matching = arg_match(options)
         if any(psql_args_matching) and\
                 'postgresql' not in args:
-            first_matching_arg = next(iter([match for match
-                                            in psql_args_matching]))
+            first_matching_arg = next(iter(list(psql_args_matching)))
             parser.error("argument {0}: not allowed without "
                          "argument --postgresql".format(first_matching_arg))
-            # parser.error() terminates with return code 2.
+                    # parser.error() terminates with return code 2.
 
         # --not-host-only is a "shortcut", actually a to-be-deprecated
         # call which means '--host ""'.
@@ -694,10 +693,11 @@ def __instance_management(args):
 
             # A STOP only stops the server associated with the given workspace
             # and view-port.
-            if 'stop' in args and \
-                not (i['port'] == args.view_port and
-                     os.path.abspath(i['workspace']) ==
-                     os.path.abspath(args.config_directory)):
+            if 'stop' in args and (
+                i['port'] != args.view_port
+                or os.path.abspath(i['workspace'])
+                != os.path.abspath(args.config_directory)
+            ):
                 continue
 
             try:
@@ -722,10 +722,11 @@ def __reload_config(args):
 
         # A RELOAD only reloads the server associated with the given workspace
         # and view-port.
-        if 'reload' in args and \
-                not (i['port'] == args.view_port and
-                     os.path.abspath(i['workspace']) ==
-                     os.path.abspath(args.config_directory)):
+        if 'reload' in args and (
+            i['port'] != args.view_port
+            or os.path.abspath(i['workspace'])
+            != os.path.abspath(args.config_directory)
+        ):
             continue
 
         try:
@@ -833,7 +834,7 @@ def server_init_start(args):
         LOG.debug("No schema upgrade is possible.")
         sys.exit(1)
 
-    force_upgrade = True if 'force_upgrade' in args else False
+    force_upgrade = 'force_upgrade' in args
 
     if db_status == DBStatus.SCHEMA_MISMATCH_OK:
         LOG.debug("Configuration database schema mismatch.")
@@ -926,8 +927,7 @@ def server_init_start(args):
     upgrade_available = {}
     for k, v in prod_statuses.items():
         db_status, _, _, _ = v
-        if db_status == DBStatus.SCHEMA_MISMATCH_OK or \
-                db_status == DBStatus.SCHEMA_MISSING:
+        if db_status in [DBStatus.SCHEMA_MISMATCH_OK, DBStatus.SCHEMA_MISSING]:
             upgrade_available[k] = v
 
     if upgrade_available:
@@ -971,14 +971,13 @@ def server_init_start(args):
                             context,
                             environ)
     except socket.error as err:
-        if err.errno == errno.EADDRINUSE:
-            LOG.error("Server can't be started, maybe port number (%s) is "
-                      "already used. Check the connection parameters. Use "
-                      "the option '-p 0' to find a free port automatically.",
-                      args.view_port)
-            sys.exit(1)
-        else:
+        if err.errno != errno.EADDRINUSE:
             raise
+        LOG.error("Server can't be started, maybe port number (%s) is "
+                  "already used. Check the connection parameters. Use "
+                  "the option '-p 0' to find a free port automatically.",
+                  args.view_port)
+        sys.exit(1)
 
 
 def main(args):

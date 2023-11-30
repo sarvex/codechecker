@@ -44,8 +44,7 @@ class AnalyzerResult(AnalyzerResultBase):
         self.__project_paths = self.__get_project_paths(root)
 
         for bug in root.findall('BugInstance'):
-            report = self.__parse_bug(bug)
-            if report:
+            if report := self.__parse_bug(bug):
                 reports.append(report)
 
         return reports

@@ -24,16 +24,17 @@ class CodeCheckerReportHashTest(unittest.TestCase):
     """ Testing CodeChecker report hash generation. """
 
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         """ Initialize test files. """
-        self.test_proj_dir = os.path.abspath(os.environ['TEST_PROJ'])
-        self.test_workspace = os.environ['TEST_WORKSPACE']
-        self.test_file_dir = os.path.join(self.test_workspace, "test_files")
+        cls.test_proj_dir = os.path.abspath(os.environ['TEST_PROJ'])
+        cls.test_workspace = os.environ['TEST_WORKSPACE']
+        cls.test_file_dir = os.path.join(cls.test_workspace, "test_files")
 
-        for test_project in os.listdir(self.test_proj_dir):
-            test_project_path = os.path.join(self.test_file_dir, test_project)
-            shutil.copytree(os.path.join(self.test_proj_dir, test_project),
-                            test_project_path)
+        for test_project in os.listdir(cls.test_proj_dir):
+            test_project_path = os.path.join(cls.test_file_dir, test_project)
+            shutil.copytree(
+                os.path.join(cls.test_proj_dir, test_project), test_project_path
+            )
 
             for test_file in os.listdir(test_project_path):
                 if test_file.endswith(".plist"):

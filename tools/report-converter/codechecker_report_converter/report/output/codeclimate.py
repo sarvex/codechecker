@@ -20,12 +20,7 @@ def convert(reports: List[Report]) -> List[Dict]:
 
     returns a list of reports converted to codeclimate format
     """
-    codeclimate_reports = []
-
-    for report in reports:
-        codeclimate_reports.append(__to_codeclimate(report))
-
-    return codeclimate_reports
+    return [__to_codeclimate(report) for report in reports]
 
 
 __codeclimate_severity_map = {

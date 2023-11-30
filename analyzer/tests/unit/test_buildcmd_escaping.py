@@ -63,9 +63,11 @@ class BuildCmdTest(unittest.TestCase):
         Generate a compile command json file.
         """
 
-        compile_cmd = {"directory": self.tmp_dir,
-                       "command": buildcmd + " -c " + self.src_file_path,
-                       "file": self.src_file_path}
+        compile_cmd = {
+            "directory": self.tmp_dir,
+            "command": f"{buildcmd} -c {self.src_file_path}",
+            "file": self.src_file_path,
+        }
 
         return [compile_cmd]
 
@@ -74,8 +76,8 @@ class BuildCmdTest(unittest.TestCase):
         Check some simple command to be executed by
         the build manager.
         """
-        cmd = 'cd ' + self.tmp_dir + ' && echo "test"'
-        print("Running: " + cmd)
+        cmd = f'cd {self.tmp_dir} && echo "test"'
+        print(f"Running: {cmd}")
         ret_val = build_manager.execute_buildcmd(cmd)
         self.assertEqual(ret_val, 0)
 

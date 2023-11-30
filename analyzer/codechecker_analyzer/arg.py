@@ -106,15 +106,13 @@ def analyzer_config(arg: str) -> AnalyzerConfig:
     <analyzer>:<option>=<value>
     These three things return as a tuple.
     """
-    m = re.match(r"(?P<analyzer>.+):(?P<option>.+)=(?P<value>.+)", arg)
-
-    if not m:
+    if m := re.match(r"(?P<analyzer>.+):(?P<option>.+)=(?P<value>.+)", arg):
+        return AnalyzerConfig(
+            m.group("analyzer"), m.group("option"), m.group("value"))
+    else:
         raise argparse.ArgumentTypeError(
             f"Analyzer option in wrong format: {arg}, should be "
             "<analyzer>:<option>=<value>")
-
-    return AnalyzerConfig(
-        m.group("analyzer"), m.group("option"), m.group("value"))
 
 
 def checker_config(arg: str) -> CheckerConfig:
@@ -124,17 +122,16 @@ def checker_config(arg: str) -> CheckerConfig:
     <analyzer>:<checker>:<option>=<value>
     These four things return as a tuple.
     """
-    m = re.match(
-        r"(?P<analyzer>.+):(?P<checker>.+):(?P<option>.+)=(?P<value>.+)", arg)
-
-    if not m:
+    if m := re.match(
+        r"(?P<analyzer>.+):(?P<checker>.+):(?P<option>.+)=(?P<value>.+)", arg
+    ):
+        return CheckerConfig(
+            m.group("analyzer"), m.group("checker"),
+            m.group("option"), m.group("value"))
+    else:
         raise argparse.ArgumentTypeError(
             f"Checker option in wrong format: {arg}, should be "
             "<analyzer>:<checker>:<option>=<value>")
-
-    return CheckerConfig(
-        m.group("analyzer"), m.group("checker"),
-        m.group("option"), m.group("value"))
 
 
 def analyzer_binary(arg: str) -> AnalyzerBinary:
@@ -142,11 +139,9 @@ def analyzer_binary(arg: str) -> AnalyzerBinary:
     This function can be used at "type" argument of argparse.add_argument().
     It checks the format of --analyzer_binary flag: <analyzer>:<path>
     """
-    m = re.match(r"(?P<analyzer>.+):(?P<path>.+)", arg)
-
-    if not m:
+    if m := re.match(r"(?P<analyzer>.+):(?P<path>.+)", arg):
+        return AnalyzerBinary(m.group("analyzer"), m.group("path"))
+    else:
         raise argparse.ArgumentTypeError(
             f"Analyzer binary in wrong format: {arg}, should be "
             "<analyzer>:</path/to/bin/>")
-
-    return AnalyzerBinary(m.group("analyzer"), m.group("path"))

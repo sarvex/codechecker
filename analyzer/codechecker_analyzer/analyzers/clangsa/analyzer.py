@@ -143,8 +143,7 @@ class ClangSA(analyzer_base.SourceAnalyzer):
         plugin_dir = analyzer_context.get_context().checker_plugin
 
         clangsa_plugin_dir = env.get_clangsa_plugin_dir()
-        is_analyzer_from_path = env.is_analyzer_from_path()
-        if is_analyzer_from_path:
+        if is_analyzer_from_path := env.is_analyzer_from_path():
             if not clangsa_plugin_dir:
                 return []
 
@@ -171,15 +170,15 @@ class ClangSA(analyzer_base.SourceAnalyzer):
             analyzer_cmd.extend(["-load", plugin])
 
     @classmethod
-    def get_binary_version(self, environ, details=False) -> str:
+    def get_binary_version(cls, environ, details=False) -> str:
         # No need to LOG here, we will emit a warning later anyway.
-        if not self.analyzer_binary():
+        if not cls.analyzer_binary():
             return None
 
         if details:
-            version = [self.analyzer_binary(), '--version']
+            version = [cls.analyzer_binary(), '--version']
         else:
-            version = [self.analyzer_binary(), '-dumpversion']
+            version = [cls.analyzer_binary(), '-dumpversion']
         try:
             output = subprocess.check_output(version,
                                              env=environ,
@@ -374,18 +373,20 @@ class ClangSA(analyzer_base.SourceAnalyzer):
                                      "-Xclang", plugin])
 
             analyzer_mode = 'plist-multi-file'
-            analyzer_cmd.extend(['-Xclang',
-                                 '-analyzer-opt-analyze-headers',
-                                 '-Xclang',
-                                 '-analyzer-output=' + analyzer_mode,
-                                 '-o', analyzer_output_file])
-
-            # Expand macros in plist output on the bug path.
-            analyzer_cmd.extend(['-Xclang',
-                                 '-analyzer-config',
-                                 '-Xclang',
-                                 'expand-macros=true'])
-
+            analyzer_cmd.extend(
+                [
+                    '-Xclang',
+                    '-analyzer-opt-analyze-headers',
+                    '-Xclang',
+                    f'-analyzer-output={analyzer_mode}',
+                    '-o',
+                    analyzer_output_file,
+                    '-Xclang',
+                    '-analyzer-config',
+                    '-Xclang',
+                    'expand-macros=true',
+                ]
+            )
             # Checker configuration arguments needs to be set before
             # the checkers.
             if self.__checker_configs:
@@ -435,18 +436,25 @@ class ClangSA(analyzer_base.SourceAnalyzer):
 
             if config.ctu_dir and not self.__disable_ctu:
                 analyzer_cmd.extend(
-                    ['-Xclang', '-analyzer-config', '-Xclang',
-                     'experimental-enable-naive-ctu-analysis=true',
-                     '-Xclang', '-analyzer-config', '-Xclang',
-                     'ctu-dir=' + self.get_ctu_dir()])
-                ctu_display_progress = \
-                    ClangSA.ctu_capability().display_progress
-                if ctu_display_progress:
+                    [
+                        '-Xclang',
+                        '-analyzer-config',
+                        '-Xclang',
+                        'experimental-enable-naive-ctu-analysis=true',
+                        '-Xclang',
+                        '-analyzer-config',
+                        '-Xclang',
+                        f'ctu-dir={self.get_ctu_dir()}',
+                    ]
+                )
+                if (
+                    ctu_display_progress := ClangSA.ctu_capability().display_progress
+                ):
                     analyzer_cmd.extend(ctu_display_progress)
 
                 if config.ctu_on_demand:
                     invocation_list_path = \
-                        os.path.join(self.get_ctu_dir(), 'invocation-list.yml')
+                            os.path.join(self.get_ctu_dir(), 'invocation-list.yml')
                     analyzer_cmd.extend(
                         ['-Xclang', '-analyzer-config', '-Xclang',
                          f'ctu-invocation-list={invocation_list_path}'
@@ -457,15 +465,15 @@ class ClangSA(analyzer_base.SourceAnalyzer):
                 analyzer_cmd.extend(['-x', compile_lang])
 
             if not has_flag('--target', analyzer_cmd) and \
-                    self.buildaction.target != "":
+                        self.buildaction.target != "":
                 analyzer_cmd.append(f"--target={self.buildaction.target}")
 
             if not has_flag('-arch', analyzer_cmd) and \
-                    self.buildaction.arch != "":
+                        self.buildaction.arch != "":
                 analyzer_cmd.extend(["-arch", self.buildaction.arch])
 
             if not has_flag('-std', analyzer_cmd) and \
-                    self.buildaction.compiler_standard != "":
+                        self.buildaction.compiler_standard != "":
                 analyzer_cmd.append(self.buildaction.compiler_standard)
 
             analyzer_cmd.extend(config.analyzer_extra_arguments)
@@ -553,8 +561,7 @@ class ClangSA(analyzer_base.SourceAnalyzer):
         paths = set()
 
         for line in output.splitlines():
-            match = re.match(regex_for_ctu_ast_load, line)
-            if match:
+            if match := re.match(regex_for_ctu_ast_load, line):
                 path = match.group(1)
                 paths.add(self.analyzer_mentioned_file_real_path(path))
 
@@ -611,29 +618,29 @@ class ClangSA(analyzer_base.SourceAnalyzer):
         handler = config_handler.ClangSAConfigHandler(environ)
 
         handler.report_hash = args.report_hash \
-            if 'report_hash' in args else None
+                if 'report_hash' in args else None
 
         handler.enable_z3 = 'enable_z3' in args and args.enable_z3 == 'on'
 
         handler.enable_z3_refutation = 'enable_z3_refutation' in args and \
-            args.enable_z3_refutation == 'on'
+                args.enable_z3_refutation == 'on'
 
         if 'ctu_phases' in args:
             handler.ctu_dir = os.path.join(args.output_path,
                                            args.ctu_dir)
             handler.ctu_on_demand = \
-                'ctu_ast_mode' in args and \
-                args.ctu_ast_mode == 'parse-on-demand'
+                    'ctu_ast_mode' in args and \
+                    args.ctu_ast_mode == 'parse-on-demand'
 
         try:
             with open(args.clangsa_args_cfg_file, 'r', encoding='utf8',
                       errors='ignore') as sa_cfg:
                 handler.analyzer_extra_arguments = \
-                    re.sub(r'\$\((.*?)\)',
+                        re.sub(r'\$\((.*?)\)',
                            env.replace_env_var(args.clangsa_args_cfg_file),
                            sa_cfg.read().strip())
                 handler.analyzer_extra_arguments = \
-                    shlex.split(handler.analyzer_extra_arguments)
+                        shlex.split(handler.analyzer_extra_arguments)
         except IOError as ioerr:
             LOG.debug_analyzer(ioerr)
         except AttributeError as aerr:
@@ -694,18 +701,19 @@ class ClangSA(analyzer_base.SourceAnalyzer):
         # CodeChecker checkers --checker-config. This command also runs
         # this function in order to construct a config handler.
         if 'checker_config' in args and isinstance(args.checker_config, list):
-            for cfg in args.checker_config:
-                if cfg.analyzer == cls.ANALYZER_NAME:
-                    handler.checker_config.append(
-                        f"{cfg.checker}:{cfg.option}={cfg.value}")
-
+            handler.checker_config.extend(
+                f"{cfg.checker}:{cfg.option}={cfg.value}"
+                for cfg in args.checker_config
+                if cfg.analyzer == cls.ANALYZER_NAME
+            )
         # TODO: This extra "isinstance" check is needed for
         # CodeChecker analyzers --analyzer-config. This command also runs
         # this function in order to construct a config handler.
         if 'analyzer_config' in args and \
-                isinstance(args.analyzer_config, list):
-            for cfg in args.analyzer_config:
-                if cfg.analyzer == cls.ANALYZER_NAME:
-                    handler.checker_config.append(f"{cfg.option}={cfg.value}")
-
+                    isinstance(args.analyzer_config, list):
+            handler.checker_config.extend(
+                f"{cfg.option}={cfg.value}"
+                for cfg in args.analyzer_config
+                if cfg.analyzer == cls.ANALYZER_NAME
+            )
         return handler

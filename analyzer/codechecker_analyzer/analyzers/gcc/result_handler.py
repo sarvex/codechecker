@@ -61,14 +61,14 @@ class GccResultHandler(ResultHandler):
         LOG.debug_analyzer(self.analyzer_stdout)
         gcc_stderr = self.analyzer_stderr
         assert gcc_stderr, "Even in the event of no reported diagnostics, " \
-                           "stderr mustn't be empty!"
+                               "stderr mustn't be empty!"
 
         # report-converter needs a file to parse, let's dump the content of
         # stderr to one.
         gcc_out_folder = Path(self.workspace, "gcc")
         gcc_out_folder.mkdir(exist_ok=True)
         gcc_dest_file_name = \
-            str(Path(gcc_out_folder,
+                str(Path(gcc_out_folder,
                      os.path.basename(self.analyzed_source_file) +
                      self.buildaction_hash + ".sarif"))
 
@@ -84,19 +84,19 @@ class GccResultHandler(ResultHandler):
         # eventually (which don't start with '-Wanalyzer'), but we should
         # probably list them in the label files as well, etc.
         reports = \
-            [r for r in reports if not r.skip(skip_handlers) and
+                [r for r in reports if not r.skip(skip_handlers) and
              r.checker_name.startswith("-Wanalyzer")]
 
         # If we were to leave sarif files in the repoort directory, we would
         # unintentionally parse them, so we rename them.
         try:
-            shutil.move(gcc_dest_file_name, gcc_dest_file_name + '.bak')
+            shutil.move(gcc_dest_file_name, f'{gcc_dest_file_name}.bak')
         except(OSError) as e:
             LOG.error(e)
 
         for report in reports:
             report.checker_name = \
-                actual_name_to_codechecker_name(report.checker_name)
+                    actual_name_to_codechecker_name(report.checker_name)
 
         hash_type = HashType.PATH_SENSITIVE
         if self.report_hash_type == 'context-free-v2':

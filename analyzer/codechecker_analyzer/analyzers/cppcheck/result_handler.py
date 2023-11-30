@@ -50,7 +50,7 @@ class CppcheckResultHandler(ResultHandler):
         for report in reports:
             # TODO check if prefix cascading still occurs.
             if not report.checker_name.startswith("cppcheck-"):
-                report.checker_name = "cppcheck-" + report.checker_name
+                report.checker_name = f"cppcheck-{report.checker_name}"
 
         hash_type = HashType.PATH_SENSITIVE
         if self.report_hash_type == 'context-free-v2':

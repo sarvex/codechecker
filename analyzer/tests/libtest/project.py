@@ -24,9 +24,7 @@ def path(test_project):
 def get_info(test_project):
     test_proj_cfg = os.path.join(os.path.realpath(path(test_project)),
                                  'project_info.json')
-    project_info = \
-        json.load(open(test_proj_cfg, encoding="utf-8", errors="ignore"))
-    return project_info
+    return json.load(open(test_proj_cfg, encoding="utf-8", errors="ignore"))
 
 
 def get_build_cmd(test_project):

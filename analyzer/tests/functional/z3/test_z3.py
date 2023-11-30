@@ -36,8 +36,6 @@ class TestSkeleton(unittest.TestCase):
         # Set the TEST_WORKSPACE used by the tests.
         os.environ['TEST_WORKSPACE'] = TEST_WORKSPACE
 
-        test_config = {}
-
         test_project = 'suppress'
 
         project_info = project.get_info(test_project)
@@ -49,8 +47,7 @@ class TestSkeleton(unittest.TestCase):
 
         project_info['project_path'] = test_proj_path
 
-        test_config['test_project'] = project_info
-
+        test_config = {'test_project': project_info}
         # Suppress file should be set here if needed by the tests.
         suppress_file = None
 
@@ -71,9 +68,7 @@ class TestSkeleton(unittest.TestCase):
             'checkers': []
         }
 
-        # Clean the test project, if needed by the tests.
-        ret = project.clean(test_project)
-        if ret:
+        if ret := project.clean(test_project):
             sys.exit(ret)
 
         test_config['codechecker_cfg'] = codechecker_cfg
@@ -88,7 +83,7 @@ class TestSkeleton(unittest.TestCase):
         # and print out the path.
         global TEST_WORKSPACE
 
-        print("Removing: " + TEST_WORKSPACE)
+        print(f"Removing: {TEST_WORKSPACE}")
         shutil.rmtree(TEST_WORKSPACE, ignore_errors=True)
 
     def setup_method(self, method):
@@ -97,7 +92,7 @@ class TestSkeleton(unittest.TestCase):
         test_workspace = os.environ['TEST_WORKSPACE']
 
         test_class = self.__class__.__name__
-        print('Running ' + test_class + ' tests in ' + test_workspace)
+        print(f'Running {test_class} tests in {test_workspace}')
 
         # Get the test project configuration from the prepared test workspace.
         self._testproject_data = env.setup_test_proj_cfg(test_workspace)

@@ -36,19 +36,19 @@ def ctu_mapping(clang_version_info):
                   "Can not detect ctu mapping tool.")
         return None, None
 
-    old_mapping_tool_name = 'clang-func-mapping'
-    old_mapping_file_name = 'externalFnMap.txt'
-
-    new_mapping_tool_name = 'clang-extdef-mapping'
-    new_mapping_file_name = 'externalDefMap.txt'
-
     major_version = clang_version_info.major_version
 
     if major_version > 7:
+        new_mapping_tool_name = 'clang-extdef-mapping'
         tool_name = new_mapping_tool_name
+        new_mapping_file_name = 'externalDefMap.txt'
+
         mapping_file = new_mapping_file_name
     else:
+        old_mapping_tool_name = 'clang-func-mapping'
         tool_name = old_mapping_tool_name
+        old_mapping_file_name = 'externalFnMap.txt'
+
         mapping_file = old_mapping_file_name
 
     installed_dir = clang_version_info.installed_dir
@@ -144,10 +144,7 @@ class CTUAutodetection:
         Returns the relevant parameters of the analyzer by parsing the
         output of the analyzer binary when called with version flag.
         """
-        if not self.__analyzer_version_info:
-            return False
-
-        return self.__analyzer_version_info
+        return self.__analyzer_version_info if self.__analyzer_version_info else False
 
     @property
     def major_version(self):
@@ -170,9 +167,7 @@ class CTUAutodetection:
         """Return the path to the mapping tool."""
         tool_path, _ = ctu_mapping(self.analyzer_version_info)
 
-        if tool_path:
-            return tool_path
-        return False
+        return tool_path if tool_path else False
 
     @property
     def display_progress(self):
@@ -193,9 +188,7 @@ class CTUAutodetection:
 
         ok = host_check.has_analyzer_config_option(
             self.__analyzer_binary, "display-ctu-progress")
-        if not ok:
-            return None
-        return ctu_display_progress_args
+        return None if not ok else ctu_display_progress_args
 
     @property
     def mapping_file_name(self):
@@ -206,9 +199,7 @@ class CTUAutodetection:
 
         _, mapping_file_name = ctu_mapping(self.analyzer_version_info)
 
-        if mapping_file_name:
-            return mapping_file_name
-        return False
+        return mapping_file_name if mapping_file_name else False
 
     @property
     def is_ctu_capable(self):
@@ -217,13 +208,11 @@ class CTUAutodetection:
         the correct one based on clang version.
         """
 
-        tool_path = self.mapping_tool_path
-
-        if not tool_path:
+        if tool_path := self.mapping_tool_path:
+            return invoke_binary_checked(tool_path, ['-version'], self.environ) \
+                    is not False
+        else:
             return False
-
-        return invoke_binary_checked(tool_path, ['-version'], self.environ) \
-            is not False
 
     @property
     def is_on_demand_ctu_available(self):

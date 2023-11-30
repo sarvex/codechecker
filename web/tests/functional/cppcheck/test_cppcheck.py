@@ -71,7 +71,7 @@ class CppCheck(unittest.TestCase):
             'codechecker_cfg']['check_env']
         codechecker.remove_test_package_product(TEST_WORKSPACE, check_env)
 
-        print("Removing: " + TEST_WORKSPACE)
+        print(f"Removing: {TEST_WORKSPACE}")
         shutil.rmtree(TEST_WORKSPACE, ignore_errors=True)
 
     def setup_method(self, method):
@@ -80,7 +80,7 @@ class CppCheck(unittest.TestCase):
         self._test_workspace = os.environ['TEST_WORKSPACE']
 
         test_class = self.__class__.__name__
-        print('Running ' + test_class + ' tests in ' + self._test_workspace)
+        print(f'Running {test_class} tests in {self._test_workspace}')
 
         self._test_cfg = env.import_test_cfg(self._test_workspace)
 

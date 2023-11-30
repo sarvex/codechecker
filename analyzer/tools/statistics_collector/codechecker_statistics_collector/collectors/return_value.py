@@ -48,9 +48,12 @@ class ReturnValueCollector:
     @staticmethod
     def checker_analyze_cfg(path):
         """ Return the checker config parameter for the analyzer checker. """
-        return ['-Xclang', '-analyzer-config',
-                '-Xclang',
-                'alpha.ericsson.statisticsbased:APIMetadataPath=' + path]
+        return [
+            '-Xclang',
+            '-analyzer-config',
+            '-Xclang',
+            f'alpha.ericsson.statisticsbased:APIMetadataPath={path}',
+        ]
 
     def total(self):
         return self.stats.get('total')
@@ -63,8 +66,7 @@ class ReturnValueCollector:
 
     def process_line(self, line):
         """ Match regex on the line """
-        m = self.ret_val_regexp.match(line)
-        if m:
+        if m := self.ret_val_regexp.match(line):
             func = m.group(1)
             checked = m.group(2)
             self.stats['total'][func] += 1
@@ -96,6 +98,6 @@ class ReturnValueCollector:
         stats_yaml.write("#\n")
         stats_yaml.write("# UncheckedReturn metadata format 1.0\n")
         for function_name in self.filter_stats():
-            stats_yaml.write("- " + function_name + '\n')
+            stats_yaml.write(f"- {function_name}" + '\n')
 
         return stats_yaml.getvalue()

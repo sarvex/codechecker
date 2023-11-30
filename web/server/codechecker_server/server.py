@@ -122,14 +122,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
             return None
 
         session = None
-        # Check if the user has presented a privileged access cookie.
-        cookies = self.headers.get("Cookie")
-        if cookies:
+        if cookies := self.headers.get("Cookie"):
             split = cookies.split("; ")
             for cookie in split:
                 values = cookie.split("=")
                 if len(values) == 2 and \
-                        values[0] == session_manager.SESSION_COOKIE_NAME:
+                            values[0] == session_manager.SESSION_COOKIE_NAME:
                     session = self.server.manager.get_session(values[1])
 
         if session and session.is_alive:
@@ -142,11 +140,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
             # If the user's access cookie is no longer usable (invalid),
             # present an error.
             client_host, client_port, is_ipv6 = \
-                RequestHandler._get_client_host_port(self.client_address)
-            LOG.debug("%s:%s Invalid access, credentials not found - "
-                      "session refused",
-                      client_host if not is_ipv6 else '[' + client_host + ']',
-                      str(client_port))
+                    RequestHandler._get_client_host_port(self.client_address)
+            LOG.debug(
+                "%s:%s Invalid access, credentials not found - " "session refused",
+                client_host if not is_ipv6 else f'[{client_host}]',
+                str(client_port),
+            )
             return None
 
     def __has_access_permission(self, product):
@@ -192,17 +191,14 @@ class RequestHandler(SimpleHTTPRequestHandler):
         # This will update the the session cookie
         # on the clients to the newest.
         if self.auth_session:
-            token = self.auth_session.token
-            if token:
+            if token := self.auth_session.token:
                 self.send_header(
                     "Set-Cookie",
                     "{0}={1}; Path=/".format(
                         session_manager.SESSION_COOKIE_NAME,
                         token))
 
-            # Set the current user name in the header.
-            user_name = self.auth_session.user
-            if user_name:
+            if user_name := self.auth_session.user:
                 self.send_header("X-User", user_name)
 
         SimpleHTTPRequestHandler.end_headers(self)
@@ -232,13 +228,17 @@ class RequestHandler(SimpleHTTPRequestHandler):
          - otherwise (e.g: 'runs') respond with index.html.
         """
         client_host, client_port, is_ipv6 = \
-            RequestHandler._get_client_host_port(self.client_address)
+                RequestHandler._get_client_host_port(self.client_address)
         self.auth_session = self.__check_session_cookie()
 
         username = self.auth_session.user if self.auth_session else 'Anonymous'
-        LOG.debug("%s:%s -- [%s] GET %s",
-                  client_host if not is_ipv6 else '[' + client_host + ']',
-                  client_port, username, self.path)
+        LOG.debug(
+            "%s:%s -- [%s] GET %s",
+            client_host if not is_ipv6 else f'[{client_host}]',
+            client_port,
+            username,
+            self.path,
+        )
 
         if self.path == '/':
             self.path = 'index.html'
@@ -332,13 +332,13 @@ class RequestHandler(SimpleHTTPRequestHandler):
         fname, _, _ = iprot.readMessageBegin()
 
         client_host, client_port, is_ipv6 = \
-            RequestHandler._get_client_host_port(self.client_address)
+                RequestHandler._get_client_host_port(self.client_address)
         self.auth_session = self.__check_session_cookie()
         auth_user = \
-            self.auth_session.user if self.auth_session else "Anonymous"
-        host_info = client_host if not is_ipv6 else '[' + client_host + ']'
+                self.auth_session.user if self.auth_session else "Anonymous"
+        host_info = client_host if not is_ipv6 else f'[{client_host}]'
         api_info = f"{host_info}:{client_port} -- [{auth_user}] POST " \
-                   f"{self.path}@{fname}"
+                       f"{self.path}@{fname}"
         LOG.info(api_info)
 
         # Create new thrift handler.
@@ -352,17 +352,19 @@ class RequestHandler(SimpleHTTPRequestHandler):
         oprot = output_protocol_factory.getProtocol(otrans)
 
         if self.server.manager.is_enabled and \
-                not self.path.endswith(('/Authentication',
+                    not self.path.endswith(('/Authentication',
                                         '/Configuration',
                                         '/ServerInfo')) and \
-                not self.auth_session:
+                    not self.auth_session:
             # Bail out if the user is not authenticated...
             # This response has the possibility of melting down Thrift clients,
             # but the user is expected to properly authenticate first.
-            LOG.debug("%s:%s Invalid access, credentials not found "
-                      "- session refused.",
-                      client_host if not is_ipv6 else '[' + client_host + ']',
-                      str(client_port))
+            LOG.debug(
+                "%s:%s Invalid access, credentials not found "
+                "- session refused.",
+                client_host if not is_ipv6 else f'[{client_host}]',
+                str(client_port),
+            )
 
             self.send_thrift_exception("Error code 401: Unauthorized!", iprot,
                                        oprot, otrans)
@@ -371,19 +373,13 @@ class RequestHandler(SimpleHTTPRequestHandler):
         # Authentication is handled, we may now respond to the user.
         try:
             product_endpoint, api_ver, request_endpoint = \
-                routing.split_client_POST_request(self.path)
+                    routing.split_client_POST_request(self.path)
             if product_endpoint is None and api_ver is None and\
-                    request_endpoint is None:
+                        request_endpoint is None:
                 raise Exception("Invalid request endpoint path.")
 
-            product = None
-            if product_endpoint:
-                # The current request came through a product route, and not
-                # to the main endpoint.
-                product = self.__check_prod_db(product_endpoint)
-
-            version_supported = routing.is_supported_version(api_ver)
-            if version_supported:
+            product = self.__check_prod_db(product_endpoint) if product_endpoint else None
+            if version_supported := routing.is_supported_version(api_ver):
                 major_version, _ = version_supported
 
                 if major_version == 6:
@@ -414,8 +410,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
                         # This endpoint is a product's report_server.
                         if not product:
                             error_msg = "Requested CodeCheckerService on a " \
-                                         "nonexistent product: '{0}'." \
-                                        .format(product_endpoint)
+                                             "nonexistent product: '{0}'." \
+                                            .format(product_endpoint)
                             LOG.error(error_msg)
                             raise ValueError(error_msg)
 
@@ -437,12 +433,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
                     else:
                         LOG.debug("This API endpoint does not exist.")
                         error_msg = "No API endpoint named '{0}'." \
-                                    .format(self.path)
+                                        .format(self.path)
                         raise ValueError(error_msg)
 
             else:
                 error_msg = "The API version you are using is not supported " \
-                            "by this server (server API version: {0})!".format(
+                                "by this server (server API version: {0})!".format(
                                 get_version_str())
                 self.send_thrift_exception(error_msg, iprot, oprot, otrans)
                 return
@@ -467,8 +463,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
             import traceback
             traceback.print_exc()
 
-            cstringio_buf = itrans.cstringio_buf.getvalue()
-            if cstringio_buf:
+            if cstringio_buf := itrans.cstringio_buf.getvalue():
                 itrans = TTransport.TMemoryBuffer(cstringio_buf)
                 iprot = input_protocol_factory.getProtocol(itrans)
 
@@ -632,19 +627,19 @@ class Product:
         """
         with DBSession(self.session_factory) as run_db_session:
             run_locks = run_db_session.query(RunLock.name) \
-                .filter(RunLock.locked_at.isnot(None)) \
-                .all()
+                    .filter(RunLock.locked_at.isnot(None)) \
+                    .all()
 
-            runs_in_progress = set([run_lock[0] for run_lock in run_locks])
+            runs_in_progress = {run_lock[0] for run_lock in run_locks}
 
             num_of_runs = run_db_session.query(Run).count()
 
             latest_store_to_product = ""
             if num_of_runs:
                 last_updated_run = run_db_session.query(Run) \
-                    .order_by(Run.date.desc()) \
-                    .limit(1) \
-                    .one_or_none()
+                        .order_by(Run.date.desc()) \
+                        .limit(1) \
+                        .one_or_none()
 
                 latest_store_to_product = last_updated_run.date
 
@@ -783,30 +778,27 @@ class CCSimpleHttpServer(HTTPServer):
         else:
             LOG.debug('Socket keepalive off, turning on.')
 
-        ret = self.socket.setsockopt(socket.SOL_SOCKET,
-                                     socket.SO_KEEPALIVE, 1)
-        if ret:
+        if ret := self.socket.setsockopt(
+            socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1
+        ):
             LOG.error('Failed to set socket keepalive: %s', ret)
 
-        idle = self.manager.get_keepalive_idle()
-        if idle:
-            ret = self.socket.setsockopt(socket.IPPROTO_TCP,
-                                         socket.TCP_KEEPIDLE, idle)
-            if ret:
+        if idle := self.manager.get_keepalive_idle():
+            if ret := self.socket.setsockopt(
+                socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, idle
+            ):
                 LOG.error('Failed to set TCP keepalive idle: %s', ret)
 
-        interval = self.manager.get_keepalive_interval()
-        if interval:
-            ret = self.socket.setsockopt(socket.IPPROTO_TCP,
-                                         socket.TCP_KEEPINTVL, interval)
-            if ret:
+        if interval := self.manager.get_keepalive_interval():
+            if ret := self.socket.setsockopt(
+                socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, interval
+            ):
                 LOG.error('Failed to set TCP keepalive interval: %s', ret)
 
-        max_probe = self.manager.get_keepalive_max_probe()
-        if max_probe:
-            ret = self.socket.setsockopt(socket.IPPROTO_TCP,
-                                         socket.TCP_KEEPCNT, max_probe)
-            if ret:
+        if max_probe := self.manager.get_keepalive_max_probe():
+            if ret := self.socket.setsockopt(
+                socket.IPPROTO_TCP, socket.TCP_KEEPCNT, max_probe
+            ):
                 LOG.error('Failed to set TCP max keepalive probe: %s', ret)
 
     def terminate(self):
@@ -970,7 +962,7 @@ def __make_root_file(root_file):
     LOG.info(credential_msg)
     LOG.info("-" * len(credential_msg))
 
-    sha = sha256((username + ':' + password).encode('utf-8')).hexdigest()
+    sha = sha256(f'{username}:{password}'.encode('utf-8')).hexdigest()
     secret = f"{username}:{sha}"
     with open(root_file, 'w', encoding="utf-8", errors="ignore") as f:
         LOG.debug("Save root SHA256 '%s'", secret)
@@ -1071,10 +1063,13 @@ def start_server(config_directory, package_data, port, config_sql_server,
         """
         Handle SIGTERM to stop the server running.
         """
-        LOG.info("Shutting down the WEB server on [%s:%d]",
-                 '[' + listen_address + ']'
-                 if server_clazz is CCSimpleHttpServerIPv6 else listen_address,
-                 port)
+        LOG.info(
+            "Shutting down the WEB server on [%s:%d]",
+            f'[{listen_address}]'
+            if server_clazz is CCSimpleHttpServerIPv6
+            else listen_address,
+            port,
+        )
         http_server.terminate()
 
         # Terminate child processes.
@@ -1097,10 +1092,13 @@ def start_server(config_directory, package_data, port, config_sql_server,
     except IOError as ex:
         LOG.debug(ex.strerror)
 
-    LOG.info("Server waiting for client requests on [%s:%d]",
-             '[' + listen_address + ']'
-             if server_clazz is CCSimpleHttpServerIPv6 else listen_address,
-             port)
+    LOG.info(
+        "Server waiting for client requests on [%s:%d]",
+        f'[{listen_address}]'
+        if server_clazz is CCSimpleHttpServerIPv6
+        else listen_address,
+        port,
+    )
 
     def unregister_handler(pid):
         """
@@ -1146,8 +1144,7 @@ def add_initial_run_database(config_sql_server, product_connection):
 
     # Load the initial list of products and create the connections.
     sess = product_session()
-    products = sess.query(ORMProduct).all()
-    if products:
+    if products := sess.query(ORMProduct).all():
         raise ValueError("Called create_initial_run_database on non-empty "
                          "config database -- you shouldn't have done this!")
 

@@ -68,7 +68,7 @@ class PlistToHtmlTest(unittest.TestCase):
         # and print out the path.
         global TEST_WORKSPACE
 
-        print("Removing: " + TEST_WORKSPACE)
+        print(f"Removing: {TEST_WORKSPACE}")
         shutil.rmtree(TEST_WORKSPACE)
 
     def __test_html_builder(self, proj: str) -> str:
@@ -83,7 +83,7 @@ class PlistToHtmlTest(unittest.TestCase):
             os.mkdir(output_dir)
 
         processed_path_hashes = set()
-        for file_path in glob.glob(os.path.join(proj_dir, f"*.plist")):
+        for file_path in glob.glob(os.path.join(proj_dir, "*.plist")):
             file_name = os.path.basename(file_path)
             output_path = os.path.join(output_dir, f"{file_name}.html")
 

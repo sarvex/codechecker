@@ -162,14 +162,8 @@ def get_user_dn(con,
     """
 
     with ldap_error_handler():
-        # Attribute values MAY contain any type of data. Before you use a
-        # value, call 'bytes_to_str' helper function to convert it to text.
-        user_data = con.search_s(account_base_dn, scope, account_pattern)
-        user_dns = []
-        if user_data:
-            # User found use the user DN from the first result.
-            for user_info in user_data:
-                user_dns.append(bytes_to_str(user_info[0]))
+        if user_data := con.search_s(account_base_dn, scope, account_pattern):
+            user_dns = [bytes_to_str(user_info[0]) for user_info in user_data]
             LOG.debug("Found user dns: %s", ', '.join(user_dns))
 
             if len(user_dns) > 1 and user_dn_postfix_preference:
@@ -234,11 +228,7 @@ class LDAPConnection:
         ldap.set_option(ldap.OPT_REFERRALS, 1 if referrals else 0)
 
         deref = ldap_config.get('deref', ldap.DEREF_ALWAYS)
-        if deref == 'never':
-            deref = ldap.DEREF_NEVER
-        else:
-            deref = ldap.DEREF_ALWAYS
-
+        deref = ldap.DEREF_NEVER if deref == 'never' else ldap.DEREF_ALWAYS
         ldap.set_option(ldap.OPT_DEREF, deref)
 
         ldap.protocol_version = ldap.VERSION3
@@ -456,16 +446,10 @@ def get_groups(ldap_config, username, credentials):
 
         groups = []
         with ldap_error_handler():
-            # Attribute values MAY contain any type of data. Before you use a
-            # value, call 'bytes_to_str' helper function to convert it to text.
-            group_result = connection.search_s(group_base,
-                                               group_scope,
-                                               group_pattern,
-                                               attr_list)
-            if group_result:
-                for g in group_result:
-                    groups.append(bytes_to_str(g[1][group_name_attr][0]))
-
+            if group_result := connection.search_s(
+                group_base, group_scope, group_pattern, attr_list
+            ):
+                groups.extend(bytes_to_str(g[1][group_name_attr][0]) for g in group_result)
         LOG.debug("groups:")
         LOG.debug(groups)
         return groups

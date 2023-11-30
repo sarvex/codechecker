@@ -42,8 +42,7 @@ def main():
     pattern = re.compile(r"^:(?P<name>[^ ]+) \((?P<kind>\S)(?P<id>\S+)\): .*")
     labels = {}
     for line in out.split('\n'):
-        m = pattern.match(line)
-        if m:
+        if m := pattern.match(line):
             checker_name = m.group("name")
             kind = m.group("kind")
             labels[checker_name] = [get_severity_label_for_kind(kind)]

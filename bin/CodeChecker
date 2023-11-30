@@ -77,7 +77,7 @@ def main(subcommand=None):
             shutil.rmtree(tmp_dir)
         except Exception as ex:
             if not isinstance(ex, OSError):
-                print('Failed to remove temporary directory: ' + tmp_dir)
+                print(f'Failed to remove temporary directory: {tmp_dir}')
                 print('Manual cleanup is required.')
                 print(ex)
 
@@ -92,7 +92,7 @@ def main(subcommand=None):
 
     def signal_term_handler(signum, frame):
         global proc_pid
-        if proc_pid and not sys.platform == "win32":
+        if proc_pid and sys.platform != "win32":
             os.kill(proc_pid, signal.SIGINT)
 
         _remove_tmp()
@@ -106,7 +106,7 @@ def main(subcommand=None):
         if proc_pid:
             os.kill(proc_pid, signal.SIGHUP)
 
-    if not sys.platform == "win32":
+    if sys.platform != "win32":
         signal.signal(signal.SIGHUP, signal_reload_handler)
 
     try:

@@ -108,10 +108,12 @@ def upgrade():
         x.content_hash: decode_file_content(x.content)
         for x in hash_to_content}
 
-    report_id_to_line = conn.execute(f"""
+    report_id_to_line = conn.execute(
+        """
         SELECT id, file_id, bug_id, checker_id, line FROM reports
         WHERE review_status != 'unreviewed'
-    """)
+    """
+    )
 
     scch = SourceCodeCommentHandler()
     comment_cache = {}

@@ -150,9 +150,7 @@ class PermissionHandler(metaclass=ABCMeta):
             raise ValueError("'*' is a special token which can NOT be "
                              "directly added to the permission table.")
 
-        added = self._add_perm_impl(auth_name, is_group)
-
-        if added:
+        if added := self._add_perm_impl(auth_name, is_group):
             LOG.info("Permission '%s' added for %s '%s' by '%s'.",
                      self._perm_name, 'group' if is_group else 'user',
                      auth_name, user_name)
@@ -165,7 +163,7 @@ class PermissionHandler(metaclass=ABCMeta):
                 # enabled permission) the table must contain '*' and the user,
                 # otherwise a '*' and the currently added group.
                 if (not is_group and len(users) == 2 and not groups) or \
-                        (is_group and len(users) == 1 and len(groups) == 1):
+                            (is_group and len(users) == 1 and len(groups) == 1):
                     self._rem_perm_impl("*", False)
         else:
             LOG.info("Permission '%s' already added for %s '%s'!",
@@ -182,9 +180,7 @@ class PermissionHandler(metaclass=ABCMeta):
             raise ValueError("'*' is a special token which can NOT be "
                              "directly removed from the permission table.")
 
-        removed = self._rem_perm_impl(auth_name, is_group)
-
-        if removed:
+        if removed := self._rem_perm_impl(auth_name, is_group):
             LOG.info("Permission '%s' removed from %s '%s' by '%s'.",
                      self._perm_name, 'group' if is_group else 'user',
                      auth_name, user_name)
@@ -289,15 +285,17 @@ class SystemPermission(Permission):
         def __get_perm_record(self, auth_name, is_group):
             SysPerm = config_db_model.SystemPermission
 
-            record = self.__session. \
-                query(SysPerm). \
-                filter(and_(
-                    SysPerm.permission == self._perm_name,
-                    func.lower(SysPerm.name) == auth_name.lower(),
-                    SysPerm.is_group == is_group
-                )).one_or_none()
-
-            return record
+            return (
+                self.__session.query(SysPerm)
+                .filter(
+                    and_(
+                        SysPerm.permission == self._perm_name,
+                        func.lower(SysPerm.name) == auth_name.lower(),
+                        SysPerm.is_group == is_group,
+                    )
+                )
+                .one_or_none()
+            )
 
         def __get_stored_auth_name_and_permissions(self, auth_name, is_group):
             """
@@ -315,9 +313,7 @@ class SystemPermission(Permission):
             stored_auth_name = auth_name
             permissions = set()
             for name, permission in self.__session.query(
-                    SysPerm.name, SysPerm.permission).filter(and_(
-                    func.lower(SysPerm.name) == auth_name.lower(),
-                    SysPerm.is_group == is_group)):
+                    SysPerm.name, SysPerm.permission).filter(and_(func.lower(SysPerm.name) == stored_auth_name.lower(), SysPerm.is_group == is_group)):
                 stored_auth_name = name
                 permissions.add(permission)
 
@@ -328,16 +324,16 @@ class SystemPermission(Permission):
                 return False
 
             stored_auth_name, permissions = \
-                self.__get_stored_auth_name_and_permissions(
+                        self.__get_stored_auth_name_and_permissions(
                     auth_name, is_group)
 
             if not permissions:  # This account have not got permission yet.
                 new_permission_record = config_db_model.SystemPermission(
                     self._permission.name, auth_name, is_group)
-            else:  # There are at least one permission of the user.
-                if self._permission.name in permissions:
-                    return False  # Required permission already granted
+            elif self._permission.name in permissions:
+                return False  # Required permission already granted
 
+            else:
                 new_permission_record = config_db_model.SystemPermission(
                     self._permission.name, stored_auth_name, is_group)
 
@@ -348,8 +344,7 @@ class SystemPermission(Permission):
             if not auth_name:
                 return False
 
-            perm_record = self.__get_perm_record(auth_name, is_group)
-            if perm_record:
+            if perm_record := self.__get_perm_record(auth_name, is_group):
                 self.__session.delete(perm_record)
                 return True
 
@@ -421,16 +416,18 @@ class ProductPermission(Permission):
         def __get_perm_record(self, auth_name, is_group):
             ProdPerm = config_db_model.ProductPermission
 
-            record = self.__session. \
-                query(ProdPerm). \
-                filter(and_(
-                    ProdPerm.permission == self._perm_name,
-                    ProdPerm.product_id == self.__product_id,
-                    func.lower(ProdPerm.name) == auth_name.lower(),
-                    ProdPerm.is_group == is_group
-                )).one_or_none()
-
-            return record
+            return (
+                self.__session.query(ProdPerm)
+                .filter(
+                    and_(
+                        ProdPerm.permission == self._perm_name,
+                        ProdPerm.product_id == self.__product_id,
+                        func.lower(ProdPerm.name) == auth_name.lower(),
+                        ProdPerm.is_group == is_group,
+                    )
+                )
+                .one_or_none()
+            )
 
         def __get_stored_auth_name_and_permissions(self, auth_name, is_group):
             """
@@ -447,10 +444,7 @@ class ProductPermission(Permission):
             stored_auth_name = auth_name
             permissions = set()
             for name, permission in self.__session.query(
-                    ProdPerm.name, ProdPerm.permission).filter(and_(
-                    ProdPerm.product_id == self.__product_id,
-                    func.lower(ProdPerm.name) == auth_name.lower(),
-                    ProdPerm.is_group == is_group)):
+                    ProdPerm.name, ProdPerm.permission).filter(and_(ProdPerm.product_id == self.__product_id, func.lower(ProdPerm.name) == stored_auth_name.lower(), ProdPerm.is_group == is_group)):
                 stored_auth_name = name
                 permissions.add(permission)
 
@@ -461,17 +455,17 @@ class ProductPermission(Permission):
                 return False
 
             stored_auth_name, permission_set = \
-                self.__get_stored_auth_name_and_permissions(
+                        self.__get_stored_auth_name_and_permissions(
                     auth_name, is_group)
 
             if not permission_set:  # This account have not got permission yet.
                 new_permission_record = config_db_model.ProductPermission(
                     self._permission.name, self.__product_id, auth_name,
                     is_group)
-            else:  # There are at least one permission of the user.
-                if self._permission.name in permission_set:
-                    return False  # Required permission already granted
+            elif self._permission.name in permission_set:
+                return False  # Required permission already granted
 
+            else:
                 new_permission_record = config_db_model.ProductPermission(
                     self._permission.name, self.__product_id,
                     stored_auth_name, is_group)
@@ -483,8 +477,7 @@ class ProductPermission(Permission):
             if not auth_name:
                 return False
 
-            perm_record = self.__get_perm_record(auth_name, is_group)
-            if perm_record:
+            if perm_record := self.__get_perm_record(auth_name, is_group):
                 self.__session.delete(perm_record)
                 return True
 
@@ -578,13 +571,11 @@ def get_permissions(scope=None):
     if scope is not None and scope not in PERMISSION_SCOPES:
         return []
 
-    ret = []
-    for _, perm in sorted(__API_TO_PERM.items()):
-        if scope is not None and \
-                not isinstance(perm, PERMISSION_SCOPES[scope]):
-            continue
-        ret.append(perm)
-    return ret
+    return [
+        perm
+        for _, perm in sorted(__API_TO_PERM.items())
+        if scope is None or isinstance(perm, PERMISSION_SCOPES[scope])
+    ]
 
 
 def permission_from_api_enum(key):
@@ -625,7 +616,7 @@ def initialise_defaults(scope, extra_params):
     creation of a new product (for PRODUCT permissions), etc.
     """
 
-    perms = [perm for perm in get_permissions(scope)]
+    perms = list(get_permissions(scope))
 
     for perm in perms:
         handler = handler_from_scope_params(perm, extra_params)

@@ -46,7 +46,7 @@ def dump_changed_files(changed_files: Set[str]):
     if not changed_files:
         return None
 
-    file_paths = '\n'.join([' - ' + f for f in changed_files])
+    file_paths = '\n'.join([f' - {f}' for f in changed_files])
     LOG.warning("The following source file contents changed or missing since "
                 "the latest analysis:\n%s\nPlease re-analyze your "
                 "project to update the reports!", file_paths)
@@ -95,14 +95,13 @@ def skip(
                           report.checker_name, report.report_hash,
                           report.review_status)
                 continue
-        else:
-            if review_status_filter and \
+        elif review_status_filter and \
                     'unreviewed' not in review_status_filter:
-                LOG.debug("Filtered out by --review-status filter option: "
-                          "%s:%s [%s] %s [unreviewed]",
-                          report.file.original_path, report.line,
-                          report.checker_name, report.report_hash)
-                continue
+            LOG.debug("Filtered out by --review-status filter option: "
+                      "%s:%s [%s] %s [unreviewed]",
+                      report.file.original_path, report.line,
+                      report.checker_name, report.report_hash)
+            continue
 
         if processed_path_hashes is not None:
             report_path_hash = get_report_path_hash(report)

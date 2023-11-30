@@ -275,23 +275,15 @@ class Parser(BaseParser):
     ) -> Optional[str]:
         """ Get analyzer name for the given checker name. """
         if metadata:
-            name = metadata.get("analyzer", {}).get("name")
-            if name:
+            if name := metadata.get("analyzer", {}).get("name"):
                 return name
 
-        if checker_name.startswith('clang-diagnostic-'):
-            return 'clang-tidy'
-
-        return None
+        return 'clang-tidy' if checker_name.startswith('clang-diagnostic-') else None
 
     def __get_bug_event_locations(self, item: PlistItem):
         """ Get bug path position for the given plist item. """
         location = item['location']
-        ranges = item.get("ranges")
-
-        # Range can provide more precise location information.
-        # Use that if available.
-        if ranges:
+        if ranges := item.get("ranges"):
             return location, ranges[0][0], ranges[0][1]
 
         return location, location, location
@@ -344,12 +336,12 @@ class Parser(BaseParser):
                 edges = item['edges'][0]
 
                 edge = None
-                if prev_control_item:
-                    if not is_same_control_item(item, prev_control_item):
-                        edge = edges['start']
-                else:
+                if (
+                    prev_control_item
+                    and not is_same_control_item(item, prev_control_item)
+                    or not prev_control_item
+                ):
                     edge = edges['start']
-
                 if edge:
                     bug_path_positions.append(BugPathPosition(
                         file=files[edge[1]['file']],
@@ -496,9 +488,10 @@ class Parser(BaseParser):
 
             # Add bug path events after control points.
             if report.bug_path_events:
-                for event in report.bug_path_events:
-                    path.append(self._create_event(event, file_index_map))
-
+                path.extend(
+                    self._create_event(event, file_index_map)
+                    for event in report.bug_path_events
+                )
             diagnostic['path'] = path
 
             if report.notes:

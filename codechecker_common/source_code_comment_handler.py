@@ -37,9 +37,7 @@ def contains_codechecker_comment(fp):
     source_text = fp.read()
     match = "codechecker_" in source_text
     fp.seek(pos_before_read)
-    if not match:
-        return False
-    return True
+    return match
 
 
 class SpellException(Exception):
@@ -149,7 +147,7 @@ class SourceCodeCommentHandler:
         # Check for codechecker source code comment.
         comment_markers = '|'.join(self.source_code_comment_markers)
         pattern = r'^\s*(?P<status>' + comment_markers + r')' \
-                  + r'\s*\[\s*(?P<checkers>[^\]]*)\s*\]\s*(?P<comment>.*)$'
+                      + r'\s*\[\s*(?P<checkers>[^\]]*)\s*\]\s*(?P<comment>.*)$'
 
         ptn = re.compile(pattern)
         res = re.match(ptn, formatted)
@@ -170,9 +168,7 @@ class SourceCodeCommentHandler:
                                                checkers.strip())
             checkers_names.update(suppress_checker_list)
 
-        # Get comment message from suppress comment.
-        comment = res.group('comment')
-        if comment:
+        if comment := res.group('comment'):
             message = comment
 
         # Get status from suppress comment.
@@ -249,19 +245,19 @@ class SourceCodeCommentHandler:
 
             # cpp style comment
             is_comment = \
-                SourceCodeCommentHandler.__check_if_comment(source_line)
+                    SourceCodeCommentHandler.__check_if_comment(source_line)
 
             # cstyle commment
             cstyle_start, cstyle_end = \
-                SourceCodeCommentHandler.__check_if_cstyle_comment(source_line)
+                    SourceCodeCommentHandler.__check_if_cstyle_comment(source_line)
 
-            if not is_comment and not cstyle_start and not cstyle_end:
-                if not cstyle_end_found:
+            if not cstyle_end_found:
+                if not is_comment and not cstyle_start and not cstyle_end:
                     # Not a comment
                     break
 
-            if not cstyle_end_found and cstyle_end:
-                cstyle_end_found = True
+                if cstyle_end:
+                    cstyle_end_found = True
 
             curr_suppress_comment.append(source_line)
             has_any_marker = any(marker in source_line for marker
@@ -287,10 +283,9 @@ class SourceCodeCommentHandler:
 
                     review_comment = ' '.join(r_comment).strip()
 
-                source_line_comment = self.__process_source_line_comment(
-                    review_comment)
-
-                if source_line_comment:
+                if source_line_comment := self.__process_source_line_comment(
+                    review_comment
+                ):
                     source_line_comment.line = orig_review_comment
                     source_line_comments.append(source_line_comment)
                 else:
@@ -351,10 +346,11 @@ class SourceCodeCommentHandler:
 
         checker_name_comments = []
         for line_comment in source_line_comments:
-            for bug_name in line_comment.checkers:
-                if (bug_name in checker_name) or (bug_name == 'all'):
-                    checker_name_comments.append(line_comment)
-
+            checker_name_comments.extend(
+                line_comment
+                for bug_name in line_comment.checkers
+                if (bug_name in checker_name) or (bug_name == 'all')
+            )
         # More than one source code comment found for this line.
         if not checker_name_comments:
             LOG.debug("No source code comments are found for checker %s",

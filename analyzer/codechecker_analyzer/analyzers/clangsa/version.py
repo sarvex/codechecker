@@ -53,10 +53,9 @@ class ClangVersionInfoParser:
         if not version_match:
             return
 
-        installed_dir_match = re.search(
-            self.clang_installed_dir_pattern, version_string)
-
-        if installed_dir_match:
+        if installed_dir_match := re.search(
+            self.clang_installed_dir_pattern, version_string
+        ):
             installed_dir = installed_dir_match.group('installed_dir')
         else:
             installed_dir = os.path.dirname(shutil.which(self.analyzer_binary))
@@ -81,5 +80,4 @@ def get(clang_binary):
         encoding="utf-8",
         errors="ignore")
     version_parser = ClangVersionInfoParser(clang_binary)
-    version_info = version_parser.parse(compiler_version)
-    return version_info
+    return version_parser.parse(compiler_version)

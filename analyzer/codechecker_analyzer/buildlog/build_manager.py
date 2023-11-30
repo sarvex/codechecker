@@ -62,8 +62,9 @@ def perform_build_command(logfile, command, keep_link, silent=False,
 
     original_env = os.environ
     try:
-        original_env_file = os.environ.get('CODECHECKER_ORIGINAL_BUILD_ENV')
-        if original_env_file:
+        if original_env_file := os.environ.get(
+            'CODECHECKER_ORIGINAL_BUILD_ENV'
+        ):
             LOG.debug_analyzer('Loading original build env from: %s',
                                original_env_file)
 
@@ -150,16 +151,15 @@ def perform_build_command(logfile, command, keep_link, silent=False,
         LOG.error(str(ex))
         sys.exit(1)
     finally:
-        debug_file = log_env.get('CC_LOGGER_DEBUG_FILE')
-        if debug_file:
+        if debug_file := log_env.get('CC_LOGGER_DEBUG_FILE'):
             LOG.info("The debug log file is: %s", debug_file)
 
-            debug_logfile_lock = debug_file + '.lock'
+            debug_logfile_lock = f'{debug_file}.lock'
             if os.path.exists(debug_logfile_lock):
                 os.remove(debug_logfile_lock)
 
         # Removing flock lock file.
-        logfile_lock = logfile + '.lock'
+        logfile_lock = f'{logfile}.lock'
         if os.path.exists(logfile_lock):
             os.remove(logfile_lock)
 
@@ -170,7 +170,5 @@ def default_compilation_db(workspace_path, run_name):
     """
     workspace_path = os.path.abspath(workspace_path)
     uid = str(uuid4())[:10]  # 10 chars should be unique enough
-    cmp_json_filename = 'compilation_commands_' + run_name + '_' \
-                        + uid + '.json'
-    compilation_commands = os.path.join(workspace_path, cmp_json_filename)
-    return compilation_commands
+    cmp_json_filename = f'compilation_commands_{run_name}_{uid}.json'
+    return os.path.join(workspace_path, cmp_json_filename)

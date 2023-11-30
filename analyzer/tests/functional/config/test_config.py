@@ -39,7 +39,7 @@ class TestConfig(unittest.TestCase):
         # and print out the path.
         global TEST_WORKSPACE
 
-        print("Removing: " + TEST_WORKSPACE)
+        print(f"Removing: {TEST_WORKSPACE}")
         shutil.rmtree(TEST_WORKSPACE)
 
     def setup_method(self, method):
@@ -48,7 +48,7 @@ class TestConfig(unittest.TestCase):
         self.test_workspace = os.environ['TEST_WORKSPACE']
 
         test_class = self.__class__.__name__
-        print('Running ' + test_class + ' tests in ' + self.test_workspace)
+        print(f'Running {test_class} tests in {self.test_workspace}')
 
         # Get the CodeChecker cmd if needed for the tests.
         self._codechecker_cmd = env.codechecker_cmd()
@@ -63,10 +63,13 @@ class TestConfig(unittest.TestCase):
         self.source_file = os.path.join(self.test_workspace, "simple.cpp")
 
         # Create a compilation database.
-        build_log = [{"directory": self.test_workspace,
-                      "command": "g++ -c " + self.source_file,
-                      "file": self.source_file
-                      }]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"g++ -c {self.source_file}",
+                "file": self.source_file,
+            }
+        ]
 
         with open(self.build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:

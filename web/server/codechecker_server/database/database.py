@@ -515,24 +515,25 @@ class PostgreSQLServer(SQLServer):
         driver = host_check.get_postgresql_driver_name()
         password = self.password
         if driver == 'pg8000' and not password:
-            pfilepath = os.environ.get('PGPASSFILE')
-            if pfilepath:
+            if pfilepath := os.environ.get('PGPASSFILE'):
                 password = pgpass.get_password_from_file(pfilepath,
                                                          self.host,
                                                          str(self.port),
                                                          self.database,
                                                          self.user)
 
-        extra_args = {}
-        if driver == "psycopg2":
-            extra_args = {'client_encoding': 'utf8'}
-        return str(URL('postgresql+' + driver,
-                       username=self.user,
-                       password=password,
-                       host=self.host,
-                       port=str(self.port),
-                       database=database,
-                       query=extra_args))
+        extra_args = {'client_encoding': 'utf8'} if driver == "psycopg2" else {}
+        return str(
+            URL(
+                f'postgresql+{driver}',
+                username=self.user,
+                password=password,
+                host=self.host,
+                port=str(self.port),
+                database=database,
+                query=extra_args,
+            )
+        )
 
     def connect(self, init=False):
         """
@@ -587,7 +588,7 @@ class PostgreSQLServer(SQLServer):
         return self._get_connection_string(self.database)
 
     def get_db_location(self):
-        return self.host + ":" + str(self.port) + "/" + self.database
+        return f"{self.host}:{str(self.port)}/{self.database}"
 
 
 class SQLiteDatabase(SQLServer):
@@ -632,13 +633,13 @@ def conv(filter_value):
     """
     Convert * to % got from clients for the database queries.
     """
-    if filter_value is None:
-        return '%'
-    return filter_value.replace('*', '%')
+    return '%' if filter_value is None else filter_value.replace('*', '%')
 
 
 def escape_like(string, escape_char='*'):
     """Escape the string parameter used in SQL LIKE expressions."""
-    return string.replace(escape_char, escape_char * 2) \
-                 .replace('%', escape_char + '%') \
-                 .replace('_', escape_char + '_')
+    return (
+        string.replace(escape_char, escape_char * 2)
+        .replace('%', f'{escape_char}%')
+        .replace('_', f'{escape_char}_')
+    )

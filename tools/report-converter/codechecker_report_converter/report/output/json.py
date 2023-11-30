@@ -16,8 +16,5 @@ def convert(reports: List[Report]) -> Dict:
     """ Convert the given reports to JSON format. """
     version = 1
 
-    json_reports = []
-    for report in reports:
-        json_reports.append(report.to_json())
-
+    json_reports = [report.to_json() for report in reports]
     return {"version": version, "reports": json_reports}

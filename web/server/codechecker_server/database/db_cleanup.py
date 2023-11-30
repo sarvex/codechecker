@@ -129,10 +129,10 @@ def upgrade_severity_levels(session_maker, checker_labels):
     """
     LOG.debug("Upgrading severity levels started...")
 
-    severity_map = {}
-    for checker in checker_labels.checkers():
-        severity_map[checker] = checker_labels.severity(checker)
-
+    severity_map = {
+        checker: checker_labels.severity(checker)
+        for checker in checker_labels.checkers()
+    }
     for severity_map_small in util.chunks(
             iter(severity_map.items()), SQLITE_LIMIT_COMPOUND_SELECT):
         severity_map_small = dict(severity_map_small)
@@ -140,16 +140,30 @@ def upgrade_severity_levels(session_maker, checker_labels):
         with DBSession(session_maker) as session:
             try:
                 # Create a sql query from the severity map.
-                severity_map_q = union_all(*[
-                    select([cast(bindparam('checker_id' + str(i),
-                                           str(checker_id))
-                            .label('checker_id'), sqlalchemy.String),
-                            cast(bindparam('severity' + str(i),
-                                           Severity._NAMES_TO_VALUES[
-                                               severity_map_small[checker_id]])
-                            .label('severity'), sqlalchemy.Integer)])
-                    for i, checker_id in enumerate(severity_map_small)]) \
-                    .alias('new_severities')
+                severity_map_q = union_all(
+                    *[
+                        select(
+                            [
+                                cast(
+                                    bindparam(
+                                        f'checker_id{str(i)}', str(checker_id)
+                                    ).label('checker_id'),
+                                    sqlalchemy.String,
+                                ),
+                                cast(
+                                    bindparam(
+                                        f'severity{str(i)}',
+                                        Severity._NAMES_TO_VALUES[
+                                            severity_map_small[checker_id]
+                                        ],
+                                    ).label('severity'),
+                                    sqlalchemy.Integer,
+                                ),
+                            ]
+                        )
+                        for i, checker_id in enumerate(severity_map_small)
+                    ]
+                ).alias('new_severities')
 
                 checker_ids = list(severity_map_small.keys())
 
@@ -161,12 +175,10 @@ def upgrade_severity_levels(session_maker, checker_labels):
                     .except_(session.query(severity_map_q)) \
                     .alias('changed_severites')
 
-                changed_checkers = session.query(
+                if changed_checkers := session.query(
                     changed_checker_q.c.checker_id,
-                    changed_checker_q.c.severity)
-
-                # Update severity levels of checkers.
-                if changed_checkers:
+                    changed_checker_q.c.severity,
+                ):
                     updated_checker_ids = set()
                     for checker_id, severity_old in changed_checkers:
                         severity_new = severity_map_small[checker_id]

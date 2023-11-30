@@ -50,9 +50,7 @@ def handle_list_products(args):
     products = client.getProducts(None, None)
 
     if args.output_format == 'json':
-        results = []
-        for product in products:
-            results.append({product.endpoint: product})
+        results = [{product.endpoint: product} for product in products]
         print(CmdLineOutputEncoder().encode(results))
     else:  # plaintext, csv
         header = ['Database status', 'Endpoint', 'Name', 'Description']
@@ -125,8 +123,7 @@ def handle_add_product(args):
         connection=dbc)
 
     LOG.debug("Sending request to add product...")
-    success = client.addProduct(prod)
-    if success:
+    if success := client.addProduct(prod):
         LOG.info("Product added successfully.")
     else:
         LOG.error("Adding the product has failed.")
@@ -149,8 +146,7 @@ def handle_del_product(args):
         LOG.error("The product '%s' does not exist!", args.endpoint)
         return
 
-    success = client.removeProduct(products[0].id)
-    if success:
+    if success := client.removeProduct(products[0].id):
         LOG.info("Product removed.")
     else:
         LOG.error("An error occurred in product removal.")

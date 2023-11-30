@@ -41,7 +41,7 @@ class DictAuth(unittest.TestCase):
         self._test_workspace = os.environ['TEST_WORKSPACE']
 
         test_class = self.__class__.__name__
-        print('Running ' + test_class + ' tests in ' + self._test_workspace)
+        print(f'Running {test_class} tests in {self._test_workspace}')
 
         self._test_cfg = env.import_test_cfg(self._test_workspace)
 
@@ -90,7 +90,7 @@ class DictAuth(unittest.TestCase):
                              "Privileged server didn't respond properly.")
 
         authd_auth_client = \
-            env.setup_auth_client(self._test_workspace,
+                env.setup_auth_client(self._test_workspace,
                                   session_token=self.sessionToken)
         user = authd_auth_client.getLoggedInUser()
         self.assertEqual(user, "cc")
@@ -131,12 +131,13 @@ class DictAuth(unittest.TestCase):
                            self._test_workspace)
 
         auth_token_client = \
-            env.setup_auth_client(self._test_workspace,
+                env.setup_auth_client(self._test_workspace,
                                   session_token=token)
 
         # Log-in by using an already generated personal token.
-        self.sessionToken = auth_token_client.performLogin("Username:Password",
-                                                           "cc:" + token)
+        self.sessionToken = auth_token_client.performLogin(
+            "Username:Password", f"cc:{token}"
+        )
 
         self.assertIsNotNone(self.sessionToken,
                              "Valid credentials didn't give us a token!")

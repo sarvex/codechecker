@@ -36,10 +36,7 @@ class BaseParser(metaclass=ABCMeta):
     def get_reports(self, file_path: str) -> List[Report]:
         """ Parse the given output. """
         lines = self._get_analyzer_result_file_content(file_path)
-        if not lines:
-            return self.reports
-
-        return self.get_reports_from_iter(lines)
+        return self.reports if not lines else self.get_reports_from_iter(lines)
 
     def get_reports_from_iter(self, lines: Iterable[str]) -> List[Report]:
         """ Parse the given output lines. """

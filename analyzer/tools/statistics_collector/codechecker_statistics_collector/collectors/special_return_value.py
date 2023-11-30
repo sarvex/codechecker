@@ -52,9 +52,12 @@ class SpecialReturnValueCollector:
     @staticmethod
     def checker_analyze_cfg(path):
         """ Return the checker config parameter for the analyzer checker. """
-        return ['-Xclang', '-analyzer-config',
-                '-Xclang',
-                'alpha.ericsson.statisticsbased:APIMetadataPath=' + path]
+        return [
+            '-Xclang',
+            '-analyzer-config',
+            '-Xclang',
+            f'alpha.ericsson.statisticsbased:APIMetadataPath={path}',
+        ]
 
     def total(self):
         return self.stats.get('total')
@@ -67,8 +70,7 @@ class SpecialReturnValueCollector:
 
     def process_line(self, line):
         """ Match regex on the line. """
-        m = self.special_ret_val_regexp.match(line)
-        if m:
+        if m := self.special_ret_val_regexp.match(line):
             func = m.group(1)
             ret_negative = m.group(2)
             ret_null = m.group(3)

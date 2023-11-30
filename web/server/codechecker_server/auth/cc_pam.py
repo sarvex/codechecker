@@ -48,10 +48,7 @@ def auth_user(pam_config, username, password):
         allowed_group = pam_config.get("groups")\
             or []
 
-        if not allowed_users and not allowed_group:
-            # If no filters are set, only authentication is needed.
-            return True
-        else:
+        if allowed_users or allowed_group:
             if username in allowed_users:
                 # The user is allowed by username.
                 return True
@@ -66,4 +63,7 @@ def auth_user(pam_config, username, password):
             return not set(groups).isdisjoint(
                 set(pam_config.get("groups")))
 
+        else:
+            # If no filters are set, only authentication is needed.
+            return True
     return False

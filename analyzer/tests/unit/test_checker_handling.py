@@ -100,7 +100,7 @@ class CheckerHandlingClangSATest(unittest.TestCase):
         analyzer = create_analyzer_sa()
         result_handler = create_result_handler(analyzer)
         cls.cmd = analyzer.construct_analyzer_cmd(result_handler)
-        print('Analyzer command: %s' % cls.cmd)
+        print(f'Analyzer command: {cls.cmd}')
 
     def test_default_checkers_are_not_disabled(self):
         """
@@ -129,9 +129,11 @@ class CheckerHandlingClangSATest(unittest.TestCase):
 
         def all_with_status(status):
             def f(checks, checkers):
-                result = set(check for check, data in checks.items()
-                             if data[0] == status)
+                result = {
+                    check for check, data in checks.items() if data[0] == status
+                }
                 return set(checkers) <= result
+
             return f
 
         args = []
@@ -311,7 +313,7 @@ class CheckerHandlingClangTidyTest(unittest.TestCase):
         analyzer = create_analyzer_tidy()
         result_handler = create_result_handler(analyzer)
         cls.cmd = analyzer.construct_analyzer_cmd(result_handler)
-        print('Analyzer command: %s' % cls.cmd)
+        print(f'Analyzer command: {cls.cmd}')
 
     def _enable_disable_pos(self, checker, checks_list):
         """
@@ -335,9 +337,16 @@ class CheckerHandlingClangTidyTest(unittest.TestCase):
         enable_pos = next((
             i for i, c in enumerate(checks_list) if
             checker_matches(c, checker)), -1)
-        disable_pos = next(reversed([
-            i for i, c in enumerate(checks_list) if
-            checker_matches(c, '-' + checker)]), -1)
+        disable_pos = next(
+            reversed(
+                [
+                    i
+                    for i, c in enumerate(checks_list)
+                    if checker_matches(c, f'-{checker}')
+                ]
+            ),
+            -1,
+        )
 
         return enable_pos, disable_pos
 

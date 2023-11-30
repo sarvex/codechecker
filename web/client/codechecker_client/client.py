@@ -64,11 +64,9 @@ def setup_auth_client(protocol, host, port, session_token=None):
     Setup the Thrift authentication client. Returns the client object and the
     session token for the session.
     """
-    client = ThriftAuthHelper(protocol, host, port,
-                              '/v' + CLIENT_API + '/Authentication',
-                              session_token)
-
-    return client
+    return ThriftAuthHelper(
+        protocol, host, port, f'/v{CLIENT_API}/Authentication', session_token
+    )
 
 
 def login_user(protocol, host, port, username, login=False):
@@ -77,12 +75,12 @@ def login_user(protocol, host, port, username, login=False):
     If login is False the user will be logged out.
     """
     session = UserCredentials()
-    auth_client = ThriftAuthHelper(protocol, host, port,
-                                   '/v' + CLIENT_API + '/Authentication')
+    auth_client = ThriftAuthHelper(
+        protocol, host, port, f'/v{CLIENT_API}/Authentication'
+    )
 
     if not login:
-        logout_done = auth_client.destroySession()
-        if logout_done:
+        if logout_done := auth_client.destroySession():
             session.save_token(host, port, None, True)
             LOG.info("Successfully logged out.")
         return
@@ -115,14 +113,13 @@ def login_user(protocol, host, port, username, login=False):
             check_preconfigured_username(username, host, port)
         else:
             LOG.info("Logging in using credentials from command line...")
-            pwd = getpass.getpass(
-                "Please provide password for user '{}': ".format(username))
+            pwd = getpass.getpass(f"Please provide password for user '{username}': ")
 
         LOG.debug("Trying to login as %s to %s:%d", username, host, port)
         try:
-            session_token = auth_client.performLogin("Username:Password",
-                                                     username + ":" +
-                                                     pwd)
+            session_token = auth_client.performLogin(
+                "Username:Password", f"{username}:{pwd}"
+            )
 
             session.save_token(host, port, session_token)
             LOG.info("Server reported successful authentication.")
@@ -150,8 +147,7 @@ def perform_auth_for_handler(auth_client, host, port, manager):
             not auth_response.sessionStillActive:
 
         if manager.is_autologin_enabled():
-            auto_auth_string = manager.get_auth_string(host, port)
-            if auto_auth_string:
+            if auto_auth_string := manager.get_auth_string(host, port):
                 LOG.info("Logging in using pre-configured credentials...")
 
                 username = auto_auth_string.split(':')[0]
@@ -202,18 +198,24 @@ def setup_product_client(protocol, host, port, auth_client=None,
     if not product_name:
         # Attach to the server-wide product service.
         product_client = ThriftProductHelper(
-            protocol, host, port,
-            '/v' + CLIENT_API + '/Products',
+            protocol,
+            host,
+            port,
+            f'/v{CLIENT_API}/Products',
             session_token,
-            lambda: get_new_token(protocol, host, port, cred_manager))
+            lambda: get_new_token(protocol, host, port, cred_manager),
+        )
     else:
         # Attach to the product service and provide a product name
         # as "viewpoint" from which the product service is called.
         product_client = ThriftProductHelper(
-            protocol, host, port,
-            '/' + product_name + '/v' + CLIENT_API + '/Products',
+            protocol,
+            host,
+            port,
+            f'/{product_name}/v{CLIENT_API}/Products',
             session_token,
-            lambda: get_new_token(protocol, host, port, cred_manager))
+            lambda: get_new_token(protocol, host, port, cred_manager),
+        )
 
         # However, in this case, the specified product might not exist,
         # which means we can't communicate with the server orderly.
@@ -257,7 +259,10 @@ def setup_client(product_url) -> ThriftResultsHelper:
               host, port, product_name)
 
     return ThriftResultsHelper(
-        protocol, host, port,
-        '/' + product_name + '/v' + CLIENT_API + '/CodeCheckerService',
+        protocol,
+        host,
+        port,
+        f'/{product_name}/v{CLIENT_API}/CodeCheckerService',
         session_token,
-        lambda: get_new_token(protocol, host, port, cred_manager))
+        lambda: get_new_token(protocol, host, port, cred_manager),
+    )

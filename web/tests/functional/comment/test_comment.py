@@ -58,12 +58,9 @@ class TestComment(unittest.TestCase):
 
         test_project_path = project.path(test_project)
 
-        test_config = {}
-
         project_info = project.get_info(test_project)
 
-        test_config['test_project'] = project_info
-
+        test_config = {'test_project': project_info}
         suppress_file = None
 
         skip_list_file = None
@@ -91,15 +88,11 @@ class TestComment(unittest.TestCase):
         # Extend the checker configuration with the server access.
         codechecker_cfg.update(server_access)
 
-        # Check the test project for the first time.
-        test_project_names = []
         test_project_name = project_info['name'] + '_' + uuid.uuid4().hex
-        test_project_names.append(test_project_name)
-
-        ret = codechecker.check_and_store(codechecker_cfg,
-                                          test_project_name,
-                                          test_project_path)
-        if ret:
+        test_project_names = [test_project_name]
+        if ret := codechecker.check_and_store(
+            codechecker_cfg, test_project_name, test_project_path
+        ):
             sys.exit(1)
         print("Analyzing test project was successful.")
 
@@ -107,10 +100,9 @@ class TestComment(unittest.TestCase):
         test_project_name = project_info['name'] + '_' + uuid.uuid4().hex
         test_project_names.append(test_project_name)
 
-        ret = codechecker.check_and_store(codechecker_cfg,
-                                          test_project_name,
-                                          test_project_path)
-        if ret:
+        if ret := codechecker.check_and_store(
+            codechecker_cfg, test_project_name, test_project_path
+        ):
             sys.exit(1)
         print("Analyzing test project was succcessful.")
 
@@ -129,14 +121,14 @@ class TestComment(unittest.TestCase):
             'codechecker_cfg']['check_env']
         codechecker.remove_test_package_product(TEST_WORKSPACE, check_env)
 
-        print("Removing: " + TEST_WORKSPACE)
+        print(f"Removing: {TEST_WORKSPACE}")
         shutil.rmtree(TEST_WORKSPACE, ignore_errors=True)
 
     def setup_method(self, method):
         self._test_workspace = os.environ.get('TEST_WORKSPACE')
 
         test_class = self.__class__.__name__
-        print('Running ' + test_class + ' tests in ' + self._test_workspace)
+        print(f'Running {test_class} tests in {self._test_workspace}')
 
         self._clang_to_test = env.clang_to_test()
 
@@ -151,12 +143,12 @@ class TestComment(unittest.TestCase):
         sessionToken_john = auth_client.performLogin("Username:Password",
                                                      "john:doe")
         self._cc_client =\
-            env.setup_viewer_client(
+                env.setup_viewer_client(
                 self._test_workspace,
                 session_token=sessionToken_cc)
 
         self._cc_client_john =\
-            env.setup_viewer_client(
+                env.setup_viewer_client(
                 self._test_workspace,
                 session_token=sessionToken_john)
         self.assertIsNotNone(self._cc_client)
@@ -235,13 +227,13 @@ class TestComment(unittest.TestCase):
         self.assertGreater(comments[0].createdAt, comments[1].createdAt)
 
         # Remove the first comment
-        print("removing comment:"+str(comments[0].id))
+        print(f"removing comment:{str(comments[0].id)}")
         success = self._cc_client.removeComment(comments[0].id)
         self.assertTrue(success)
         logging.debug('Comment removed successfully')
 
         # Remove the second comment as john should be unsuccessful
-        print("removing comment:"+str(comments[1].id))
+        print(f"removing comment:{str(comments[1].id)}")
         with self.assertRaises(RequestFailed):
             self._cc_client_john.removeComment(comments[1].id)
             logging.debug('Comment was removed by another user')

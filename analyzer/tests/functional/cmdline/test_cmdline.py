@@ -54,7 +54,7 @@ class TestCmdline(unittest.TestCase):
         # and print out the path.
         global TEST_WORKSPACE
 
-        print("Removing: " + TEST_WORKSPACE)
+        print(f"Removing: {TEST_WORKSPACE}")
         shutil.rmtree(TEST_WORKSPACE)
 
     def setup_method(self, method):
@@ -62,7 +62,7 @@ class TestCmdline(unittest.TestCase):
         self.test_workspace = os.environ['TEST_WORKSPACE']
 
         test_class = self.__class__.__name__
-        print('Running ' + test_class + ' tests in ' + self.test_workspace)
+        print(f'Running {test_class} tests in {self.test_workspace}')
 
         # Get the CodeChecker cmd if needed for the tests.
         self._codechecker_cmd = env.codechecker_cmd()

@@ -640,24 +640,25 @@ class LogParserTest(unittest.TestCase):
         os.symlink(fileC, fileC_symdir)
 
         compilation_cmd = [
-            {"directory": self.tmp_dir,
-             "command": "g++ " + fileA,
-             "file": fileA},
-            {"directory": self.tmp_dir,
-             "command": "g++ " + fileB,
-             "file": fileB},
-            {"directory": tmp_symdir,
-             "command": "g++ " + fileC_symdir,
-             "file": fileC_symdir},
-            {"directory": self.tmp_dir,
-             "command": "g++ " + fileC,
-             "file": fileC},
-            {"directory": self.tmp_dir,
-             "command": "g++ " + fileA_sym,
-             "file": fileA_sym},
-            {"directory": self.tmp_dir,
-             "command": "g++ " + fileB_sym,
-             "file": fileB_sym}]
+            {"directory": self.tmp_dir, "command": f"g++ {fileA}", "file": fileA},
+            {"directory": self.tmp_dir, "command": f"g++ {fileB}", "file": fileB},
+            {
+                "directory": tmp_symdir,
+                "command": f"g++ {fileC_symdir}",
+                "file": fileC_symdir,
+            },
+            {"directory": self.tmp_dir, "command": f"g++ {fileC}", "file": fileC},
+            {
+                "directory": self.tmp_dir,
+                "command": f"g++ {fileA_sym}",
+                "file": fileA_sym,
+            },
+            {
+                "directory": self.tmp_dir,
+                "command": f"g++ {fileB_sym}",
+                "file": fileB_sym,
+            },
+        ]
 
         build_actions, _ = log_parser.parse_unique_log(compilation_cmd,
                                                        self.__this_dir,
@@ -686,4 +687,4 @@ class LogParserTest(unittest.TestCase):
         # Make sure that the test running machine architecture is in the
         # LD_PRELOAD path.
         machine = platform.uname().machine
-        self.assertTrue(env["LD_PRELOAD"].endswith(machine + "/ldlogger.so"))
+        self.assertTrue(env["LD_PRELOAD"].endswith(f"{machine}/ldlogger.so"))

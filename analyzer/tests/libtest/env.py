@@ -23,7 +23,7 @@ from functional import REPO_ROOT
 def codechecker_env():
     checker_env = os.environ.copy()
     cc_bin = os.path.join(PKG_ROOT, 'bin')
-    checker_env['PATH'] = cc_bin + ":" + checker_env['PATH']
+    checker_env['PATH'] = f"{cc_bin}:" + checker_env['PATH']
     return checker_env
 
 
@@ -50,7 +50,7 @@ def get_workspace(test_id='test'):
         os.makedirs(workspace_root)
 
     if test_id:
-        return tempfile.mkdtemp(prefix=test_id+"-", dir=workspace_root)
+        return tempfile.mkdtemp(prefix=f"{test_id}-", dir=workspace_root)
     else:
         return workspace_root
 

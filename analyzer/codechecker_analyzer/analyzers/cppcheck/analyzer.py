@@ -49,7 +49,7 @@ def parse_checkers(cppcheck_output):
     for error in errors.findall('error'):
         name = error.attrib.get('id')
         if name:
-            name = "cppcheck-" + name
+            name = f"cppcheck-{name}"
         msg = str(error.attrib.get('msg') or '')
         # TODO: Check severity handling in cppcheck
         # severity = error.attrib.get('severity')
@@ -65,8 +65,7 @@ def parse_version(cppcheck_output):
     Parse cppcheck version output and return the version number.
     """
     version_re = re.compile(r'^Cppcheck (?P<version>[\d\.]+)')
-    match = version_re.match(cppcheck_output)
-    if match:
+    if match := version_re.match(cppcheck_output):
         return match.group('version')
 
 
@@ -83,21 +82,19 @@ class Cppcheck(analyzer_base.SourceAnalyzer):
             .analyzer_binaries[cls.ANALYZER_NAME]
 
     @classmethod
-    def get_binary_version(self, environ, details=False) -> str:
+    def get_binary_version(cls, environ, details=False) -> str:
         """ Get analyzer version information. """
         # No need to LOG here, we will emit a warning later anyway.
-        if not self.analyzer_binary():
+        if not cls.analyzer_binary():
             return None
-        version = [self.analyzer_binary(), '--version']
+        version = [cls.analyzer_binary(), '--version']
         try:
             output = subprocess.check_output(version,
                                              env=environ,
                                              universal_newlines=True,
                                              encoding="utf-8",
                                              errors="ignore")
-            if details:
-                return output.strip()
-            return parse_version(output)
+            return output.strip() if details else parse_version(output)
         except (subprocess.CalledProcessError, OSError) as oerr:
             LOG.warning("Failed to get analyzer version: %s",
                         ' '.join(version))
@@ -161,7 +158,7 @@ class Cppcheck(analyzer_base.SourceAnalyzer):
                 else:
                     standard = self.buildaction.analyzer_options[i+1]
                 standard = standard.lower().replace("gnu", "c")
-                params.extend(["--std=" + standard])
+                params.extend([f"--std={standard}"])
         return params
 
     def construct_analyzer_cmd(self, result_handler):
@@ -171,12 +168,7 @@ class Cppcheck(analyzer_base.SourceAnalyzer):
         try:
             config = self.config_handler
 
-            analyzer_cmd = [Cppcheck.analyzer_binary()]
-
-            # TODO implement a more granular commandline checker config
-            # Cppcheck runs with all checkers enabled for the time being
-            # the unneded checkers are passed as suppressed checkers
-            analyzer_cmd.append('--enable=all')
+            analyzer_cmd = [Cppcheck.analyzer_binary(), '--enable=all']
 
             for checker_name, value in config.checks().items():
                 if value[0] == CheckerState.disabled:
@@ -184,7 +176,7 @@ class Cppcheck(analyzer_base.SourceAnalyzer):
                     # than startswith and a hardcoded slicing
                     if checker_name.startswith("cppcheck-"):
                         checker_name = checker_name[9:]
-                    analyzer_cmd.append('--suppress=' + checker_name)
+                    analyzer_cmd.append(f'--suppress={checker_name}')
 
             # unusedFunction check is for whole program analysis,
             # which is not compatible with per source file analysis.
@@ -229,10 +221,7 @@ class Cppcheck(analyzer_base.SourceAnalyzer):
                               result_handler.buildaction_hash)
             output_dir.mkdir(exist_ok=True)
 
-            analyzer_cmd.append('--plist-output=' + str(output_dir))
-
-            analyzer_cmd.append(self.source_file)
-
+            analyzer_cmd.extend((f'--plist-output={str(output_dir)}', self.source_file))
             return analyzer_cmd
 
         except Exception as ex:
@@ -276,9 +265,7 @@ class Cppcheck(analyzer_base.SourceAnalyzer):
     def analyze(self, analyzer_cmd, res_handler, proc_callback=None):
         env = None
 
-        original_env_file = os.environ.get(
-            'CODECHECKER_ORIGINAL_BUILD_ENV')
-        if original_env_file:
+        if original_env_file := os.environ.get('CODECHECKER_ORIGINAL_BUILD_ENV'):
             with open(original_env_file, 'rb') as env_file:
                 env = pickle.load(env_file, encoding='utf-8')
 
@@ -310,7 +297,7 @@ class Cppcheck(analyzer_base.SourceAnalyzer):
             # raw files.
             try:
                 shutil.copy2(cppcheck_out, codechecker_out)
-                Path(cppcheck_out).rename(str(cppcheck_out) + ".bak")
+                Path(cppcheck_out).rename(f"{str(cppcheck_out)}.bak")
             except(OSError) as e:
                 LOG.error(e.errno)
 
@@ -371,7 +358,7 @@ class Cppcheck(analyzer_base.SourceAnalyzer):
         analyzer_config = defaultdict(list)
 
         if 'analyzer_config' in args and \
-                isinstance(args.analyzer_config, list):
+                    isinstance(args.analyzer_config, list):
             for cfg in args.analyzer_config:
                 if cfg.analyzer == cls.ANALYZER_NAME:
                     analyzer_config[cfg.option].append(cfg.value)
@@ -382,11 +369,11 @@ class Cppcheck(analyzer_base.SourceAnalyzer):
             with open(args.cppcheck_args_cfg_file, 'r', encoding='utf8',
                       errors='ignore') as sa_cfg:
                 handler.analyzer_extra_arguments = \
-                    re.sub(r'\$\((.*?)\)',
+                        re.sub(r'\$\((.*?)\)',
                            env.replace_env_var(args.cppcheck_args_cfg_file),
                            sa_cfg.read().strip())
                 handler.analyzer_extra_arguments = \
-                    shlex.split(handler.analyzer_extra_arguments)
+                        shlex.split(handler.analyzer_extra_arguments)
         except IOError as ioerr:
             LOG.debug_analyzer(ioerr)
         except AttributeError as aerr:
@@ -407,7 +394,7 @@ class Cppcheck(analyzer_base.SourceAnalyzer):
         # in the label file.
         checker_labels = context.checker_labels
         checkers_from_label = checker_labels.checkers("cppcheck")
-        parsed_set = set([data[0] for data in checkers])
+        parsed_set = {data[0] for data in checkers}
         for checker in set(checkers_from_label):
             if checker not in parsed_set:
                 checkers.append((checker, ""))

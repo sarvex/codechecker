@@ -42,11 +42,9 @@ class TestComment(unittest.TestCase):
 
         test_project_path = project.path(test_project)
 
-        test_config = {}
-
         project_info = project.get_info(test_project)
 
-        test_config['test_project'] = project_info
+        test_config = {'test_project': project_info}
         test_env = env.test_env(TEST_WORKSPACE)
 
         codechecker_cfg = {
@@ -68,10 +66,9 @@ class TestComment(unittest.TestCase):
 
         # Check the test project for the first time.
         test_project_name = project_info['name'] + '_' + uuid.uuid4().hex
-        ret = codechecker.check_and_store(codechecker_cfg,
-                                          test_project_name,
-                                          test_project_path)
-        if ret:
+        if ret := codechecker.check_and_store(
+            codechecker_cfg, test_project_name, test_project_path
+        ):
             sys.exit(1)
         print("Analyzing test project was successful.")
 
@@ -90,14 +87,14 @@ class TestComment(unittest.TestCase):
             'codechecker_cfg']['check_env']
         codechecker.remove_test_package_product(TEST_WORKSPACE, check_env)
 
-        print("Removing: " + TEST_WORKSPACE)
+        print(f"Removing: {TEST_WORKSPACE}")
         shutil.rmtree(TEST_WORKSPACE, ignore_errors=True)
 
     def setup_method(self, method):
         self._test_workspace = os.environ.get('TEST_WORKSPACE')
 
         test_class = self.__class__.__name__
-        print('Running ' + test_class + ' tests in ' + self._test_workspace)
+        print(f'Running {test_class} tests in {self._test_workspace}')
 
         self._testproject_data = env.setup_test_proj_cfg(self._test_workspace)
         self.assertIsNotNone(self._testproject_data)
@@ -118,11 +115,10 @@ class TestComment(unittest.TestCase):
             ("Dummy", None, None),
         ]
 
-        cleanup_plan_id = {}
-        for name, description, due_date in data:
-            cleanup_plan_id[name] = self._cc_client.addCleanupPlan(
-                name, description, due_date)
-
+        cleanup_plan_id = {
+            name: self._cc_client.addCleanupPlan(name, description, due_date)
+            for name, description, due_date in data
+        }
         # Get all cleanup plans.
         cleanup_plans = self._cc_client.getCleanupPlans(None)
         self.assertEqual(len(cleanup_plans), 2)
@@ -201,7 +197,7 @@ class TestComment(unittest.TestCase):
         run_results = get_all_run_results(self._cc_client)
         self.assertTrue(run_results)
 
-        uniqued_report_hashes = set(r.bugHash for r in run_results)
+        uniqued_report_hashes = {r.bugHash for r in run_results}
         self.assertTrue(len(uniqued_report_hashes) > 2)
 
         it = iter(uniqued_report_hashes)

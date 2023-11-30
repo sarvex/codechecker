@@ -47,11 +47,10 @@ def extend(path_env_extra, ld_lib_path_extra):
 
     if path_env_extra:
         extra_path = ':'.join(path_env_extra)
-        LOG.debug_analyzer(
-            'Extending PATH environment variable with: ' + extra_path)
+        LOG.debug_analyzer(f'Extending PATH environment variable with: {extra_path}')
 
         try:
-            new_env['PATH'] = extra_path + ':' + new_env['PATH']
+            new_env['PATH'] = f'{extra_path}:' + new_env['PATH']
         except KeyError:
             new_env['PATH'] = extra_path
 
@@ -62,8 +61,7 @@ def extend(path_env_extra, ld_lib_path_extra):
             extra_lib)
         try:
             original_ld_library_path = new_env['LD_LIBRARY_PATH']
-            new_env['LD_LIBRARY_PATH'] = \
-                extra_lib + ':' + original_ld_library_path
+            new_env['LD_LIBRARY_PATH'] = f'{extra_lib}:{original_ld_library_path}'
         except KeyError:
             new_env['LD_LIBRARY_PATH'] = extra_lib
 
@@ -121,17 +119,15 @@ def get_binary_in_path(basename_list, versioning_pattern, env):
         # found binary name group.
         return list(binaries.values())[0][0]
     else:
-        keys = list(binaries.keys())
-        keys.sort()
-
-        # If one of the base names match, select that version.
-        files = None
-        for base_key in basename_list:
-            # Cannot use set here as it would destroy precendence.
-            if base_key in keys:
-                files = binaries[base_key]
-                break
-
+        keys = sorted(binaries.keys())
+        files = next(
+            (
+                binaries[base_key]
+                for base_key in basename_list
+                if base_key in keys
+            ),
+            None,
+        )
         if not files:
             # Select the "newest" available version if there are multiple and
             # none of the base names matched.
@@ -144,9 +140,7 @@ def get_binary_in_path(basename_list, versioning_pattern, env):
 def is_analyzer_from_path():
     """ Return True if CC_ANALYZERS_FROM_PATH environment variable is set. """
     analyzers_from_path = os.environ.get('CC_ANALYZERS_FROM_PATH', '').lower()
-    if analyzers_from_path in ['yes', '1']:
-        return True
-    return False
+    return analyzers_from_path in ['yes', '1']
 
 
 def get_clangsa_plugin_dir():

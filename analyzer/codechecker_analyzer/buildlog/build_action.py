@@ -72,9 +72,7 @@ class BuildAction:
         """
         hash_content = []
         hash_content.extend(self.analyzer_options)
-        hash_content.append(str(self.analyzer_type))
-        hash_content.append(self.target)
-        hash_content.append(self.source)
+        hash_content.extend((str(self.analyzer_type), self.target, self.source))
         return hash(''.join(hash_content))
 
     def with_attr(self, attr, value):

@@ -96,9 +96,7 @@ def __get_report_hash_path_sensitive(report: Report) -> List[str]:
 
         for p in report.bug_path_positions:
             if p.range:
-                hash_content.append(str(p.range.start_col))
-                hash_content.append(str(p.range.end_col))
-
+                hash_content.extend((str(p.range.start_col), str(p.range.end_col)))
         return hash_content
     except Exception as ex:
         LOG.error("Hash generation failed!")
@@ -182,7 +180,7 @@ def get_report_hash(report: Report, hash_type: HashType) -> str:
     elif hash_type == HashType.DIAGNOSTIC_MESSAGE:
         hash_content = __get_report_hash_diagnostic_message(report)
     else:
-        raise Exception("Invalid report hash type: " + str(hash_type))
+        raise Exception(f"Invalid report hash type: {str(hash_type)}")
 
     return __str_to_hash('|||'.join(hash_content))
 

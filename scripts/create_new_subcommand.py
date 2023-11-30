@@ -31,16 +31,18 @@ def main():
     lib_dir = os.path.join(parent_dir, 'libcodechecker')
     handler_dir = os.path.join(lib_dir, 'libhandlers')
 
-    if os.path.exists(os.path.join(bin_dir, 'codechecker-' + command_name)) \
-            or os.path.exists(os.path.join(lib_dir, command_name)) \
-            or os.path.exists(os.path.join(handler_dir, command_name + '.py')):
+    if (
+        os.path.exists(os.path.join(bin_dir, f'codechecker-{command_name}'))
+        or os.path.exists(os.path.join(lib_dir, command_name))
+        or os.path.exists(os.path.join(handler_dir, f'{command_name}.py'))
+    ):
         print("This command already exists, refusing to create!")
         sys.exit(1)
 
     resource_dir = os.path.join(current_dir, 'resources')
 
-    entryfile = os.path.join(bin_dir, 'codechecker-' + command_name)
-    print("Creating new entrypoint in '" + entryfile + "'")
+    entryfile = os.path.join(bin_dir, f'codechecker-{command_name}')
+    print(f"Creating new entrypoint in '{entryfile}'")
     with open(os.path.join(resource_dir, 'entrypoint_template.py'),
               encoding="utf-8", errors="ignore") as template:
         with open(entryfile, 'w', encoding="utf-8", errors="ignore") as entry:
@@ -64,18 +66,18 @@ def main():
         # Write licensing information to init of module
         s = "# --------------------------------------------------------------"\
             "---------------""""
-#
-#  Part of the CodeChecker project, under the Apache License v2.0 with
-#  LLVM Exceptions. See LICENSE for license information.
-#  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-#
-# -------------------------------------------------------------------------"""\
+    #
+    #  Part of the CodeChecker project, under the Apache License v2.0 with
+    #  LLVM Exceptions. See LICENSE for license information.
+    #  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+    #
+    # -------------------------------------------------------------------------"""\
             "----\n"
 
         init.write(s)
 
-    handler_file = os.path.join(handler_dir, lib_name + '.py')
-    print("Creating subcommand definition in '" + handler_file + "'")
+    handler_file = os.path.join(handler_dir, f'{lib_name}.py')
+    print(f"Creating subcommand definition in '{handler_file}'")
     with open(os.path.join(resource_dir, 'command_template.py'),
               encoding="utf-8", errors="ignore") as template:
         with open(handler_file, 'w',
@@ -88,16 +90,16 @@ def main():
     print("Subcommand created successfully")
     print("-------------------------------")
     print("Please see the file ")
-    print("'" + handler_file + "'")
+    print(f"'{handler_file}'")
     print("to add your subcommand's argument list, detailed help,")
     print("and to write the main() of the subcommand.")
     print("")
     print("Please rebuild CodeChecker to make sure your command is available.")
     print("Also please make sure you add the following paths to version "
           "control:")
-    print("  * " + entryfile)
-    print("  * " + handler_file)
-    print("  * " + os.path.join(lib_dir, lib_name))
+    print(f"  * {entryfile}")
+    print(f"  * {handler_file}")
+    print(f"  * {os.path.join(lib_dir, lib_name)}")
 
 
 if __name__ == "__main__":

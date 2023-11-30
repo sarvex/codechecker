@@ -133,14 +133,12 @@ class ResultHandler(metaclass=ABCMeta):
                 del args[idx]
             del args[idx]
 
-        build_info = source_file + '_' + ' '.join(args)
+        build_info = f'{source_file}_' + ' '.join(args)
 
         self.buildaction_hash = \
-            hashlib.md5(build_info.encode(errors='ignore')).hexdigest()
+                hashlib.md5(build_info.encode(errors='ignore')).hexdigest()
 
-        return analyzed_file_name + '_' + \
-            str(self.buildaction.analyzer_type) + '_' + \
-            self.buildaction_hash
+        return f'{analyzed_file_name}_{str(self.buildaction.analyzer_type)}_{self.buildaction_hash}'
 
     @property
     def analyzer_result_file(self):
@@ -150,8 +148,8 @@ class ResultHandler(metaclass=ABCMeta):
         """
         if not self.__result_file:
             self.__result_file = os.path.join(
-                self.__workspace,
-                self.analyzer_action_str + '.plist')
+                self.__workspace, f'{self.analyzer_action_str}.plist'
+            )
 
         return self.__result_file
 
@@ -164,9 +162,8 @@ class ResultHandler(metaclass=ABCMeta):
         """
         if not self.__fixit_file:
             self.__fixit_file = os.path.join(
-                self.__workspace,
-                'fixit',
-                self.analyzer_action_str + '.yaml')
+                self.__workspace, 'fixit', f'{self.analyzer_action_str}.yaml'
+            )
 
         return self.__fixit_file
 

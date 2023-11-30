@@ -58,14 +58,12 @@ def get_tool_info() -> Tuple[str, str]:
     CodeChecker information, otherwise this tool (report-converter)
     information.
     """
-    data_files_dir_path = os.environ.get('CC_DATA_FILES_DIR')
-    if data_files_dir_path:
+    if data_files_dir_path := os.environ.get('CC_DATA_FILES_DIR'):
         analyzer_version_file_path = os.path.join(
             data_files_dir_path, 'config', 'analyzer_version.json')
         if os.path.exists(analyzer_version_file_path):
             data = load_json(analyzer_version_file_path)
-            version = data.get('version')
-            if version:
+            if version := data.get('version'):
                 return 'CodeChecker', f"{version['major']}." \
                     f"{version['minor']}.{version['revision']}"
 

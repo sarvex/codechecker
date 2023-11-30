@@ -132,9 +132,7 @@ class LOG_CFG_SERVER:
 
         self.log_server = None
 
-        log_cfg_port = os.environ.get('CC_LOG_CONFIG_PORT')
-
-        if log_cfg_port:
+        if log_cfg_port := os.environ.get('CC_LOG_CONFIG_PORT'):
             self.log_server = config.listen(int(log_cfg_port))
             self.log_server.start()
 
@@ -167,7 +165,7 @@ def setup_logger(log_level=None, stream=None, workspace=None):
         handlers = LOG_CONFIG.get("handlers", {})
         for k in handlers.keys():
             LOG_CONFIG['handlers'][k]['level'] = log_level
-            if log_level == 'DEBUG' or log_level == 'DEBUG_ANALYZER':
+            if log_level in ['DEBUG', 'DEBUG_ANALYZER']:
                 LOG_CONFIG['handlers'][k]['formatter'] = 'precise'
 
     if stream:

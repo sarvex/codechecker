@@ -26,19 +26,19 @@ def check_intercept(env) -> bool:
     """
     intercept_cmd = ['intercept-build', '--help']
     try:
-        res = subprocess.check_call(
-            intercept_cmd,
-            env=env,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            encoding="utf-8",
-            errors="ignore")
-
-        if not res:
+        if not (
+            res := subprocess.check_call(
+                intercept_cmd,
+                env=env,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                encoding="utf-8",
+                errors="ignore",
+            )
+        ):
             return True
-        else:
-            LOG.debug('Failed to run: "%s"', ' '.join(intercept_cmd))
-            return False
+        LOG.debug('Failed to run: "%s"', ' '.join(intercept_cmd))
+        return False
     except subprocess.CalledProcessError:
         LOG.debug('Failed to run: "%s", process returned non-zero exit code.',
                   ' '.join(intercept_cmd))

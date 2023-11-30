@@ -32,8 +32,6 @@ def setup_class_common():
 
     os.environ['TEST_WORKSPACE'] = TEST_WORKSPACE
 
-    test_config = {}
-
     # Setup environment variables for the test cases.
     host_port_cfg = {'viewer_host': 'localhost',
                      'viewer_port': env.get_free_port(),
@@ -51,8 +49,7 @@ def setup_class_common():
 
     codechecker_cfg['run_names'] = []
 
-    test_config['codechecker_cfg'] = codechecker_cfg
-
+    test_config = {'codechecker_cfg': codechecker_cfg}
     # Export configuration for the tests.
     env.export_test_cfg(TEST_WORKSPACE, test_config)
 
@@ -79,5 +76,5 @@ def teardown_class_common():
     __STOP_SERVER.set()
     __STOP_SERVER.clear()
 
-    print("Removing: " + TEST_WORKSPACE)
+    print(f"Removing: {TEST_WORKSPACE}")
     shutil.rmtree(TEST_WORKSPACE, ignore_errors=True)

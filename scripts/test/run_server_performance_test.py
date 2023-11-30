@@ -179,7 +179,7 @@ class UserSimulator:
     def __init__(self, stat, beta):
         UserSimulator._counter += 1
         self._id = UserSimulator._counter
-        self._actions = list()
+        self._actions = []
         self._stat = stat
         self._beta = beta
 
@@ -209,7 +209,7 @@ class UserSimulator:
 
             # The exit code of some commands (e.g. CodeChecker cmd diff) can be
             # 2 if some reports were found. We consider this exit code normal.
-            if ret != 0 and ret != 2:
+            if ret not in [0, 2]:
                 LOG.error("'%s' job has failed with '%d' error code!",
                           name, ret)
 
@@ -364,7 +364,7 @@ def get_statistics(run_name, server_url):
 
 def simulate_user(report_dirs, server_url, stat, beta, rounds):
     user = UserSimulator(stat, beta)
-    run_name = 'performance_test_' + str(user.get_id())
+    run_name = f'performance_test_{str(user.get_id())}'
 
     for report_dir in report_dirs:
         user.add_action(

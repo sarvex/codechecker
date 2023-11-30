@@ -42,7 +42,7 @@ class OptionParserTest(unittest.TestCase):
         res = log_parser.parse_options(action)
         print(res)
         self.assertFalse("-fno-merge-const-bfstores" in res.analyzer_options)
-        self.assertTrue('main.cpp' == res.source)
+        self.assertTrue(res.source == 'main.cpp')
         self.assertTrue(BuildAction.COMPILE, res.action_type)
         self.assertEqual(0, len(res.analyzer_options))
 
@@ -62,7 +62,7 @@ class OptionParserTest(unittest.TestCase):
 
         res = log_parser.parse_options(action)
         print(res)
-        self.assertTrue('main.cpp' == res.source)
+        self.assertTrue(res.source == 'main.cpp')
         self.assertEqual(BuildAction.COMPILE, res.action_type)
 
     def test_compile_onefile(self):
@@ -76,7 +76,7 @@ class OptionParserTest(unittest.TestCase):
 
         res = log_parser.parse_options(action)
         print(res)
-        self.assertTrue('main.cpp' == res.source)
+        self.assertTrue(res.source == 'main.cpp')
         self.assertEqual(BuildAction.COMPILE, res.action_type)
 
     def test_nasm_action(self):
@@ -106,7 +106,7 @@ class OptionParserTest(unittest.TestCase):
         res = log_parser.parse_options(action)
         print(res)
 
-        self.assertTrue('main.c' == res.source)
+        self.assertTrue(res.source == 'main.c')
         self.assertEqual(BuildAction.PREPROCESS, res.action_type)
 
     def test_compile_lang(self):
@@ -122,7 +122,7 @@ class OptionParserTest(unittest.TestCase):
         res = log_parser.parse_options(action)
         print(res)
 
-        self.assertTrue('main.c' == res.source)
+        self.assertTrue(res.source == 'main.c')
         self.assertEqual('c', res.lang)
         self.assertEqual(BuildAction.COMPILE, res.action_type)
 
@@ -148,7 +148,7 @@ class OptionParserTest(unittest.TestCase):
         res = log_parser.parse_options(action)
         print(res)
 
-        self.assertTrue('main.c' == res.source)
+        self.assertTrue(res.source == 'main.c')
         self.assertEqual(arch['c'], res.arch)
         self.assertEqual(BuildAction.COMPILE, res.action_type)
 
@@ -242,9 +242,9 @@ class OptionParserTest(unittest.TestCase):
                             "-I/home/test"]
         linker_options = ["-L/home/test_lib", "-lm"]
         build_cmd = "g++ -o fubar " + \
-                    ' '.join(compiler_options) + ' ' + \
-                    ' '.join(linker_options) + ' ' + \
-                    ' '.join(object_files)
+                        ' '.join(compiler_options) + ' ' + \
+                        ' '.join(linker_options) + ' ' + \
+                        ' '.join(object_files)
         action = {
             'file': '',
             'command': build_cmd,
@@ -252,7 +252,7 @@ class OptionParserTest(unittest.TestCase):
 
         res = log_parser.parse_options(action)
         print(res)
-        self.assertTrue('' == res.source)
+        self.assertTrue(res.source == '')
         self.assertTrue(set(compiler_options) == set(res.analyzer_options))
         self.assertEqual(BuildAction.LINK, res.action_type)
 
@@ -301,8 +301,9 @@ class OptionParserTest(unittest.TestCase):
                   "-mabi=spe", "-mabi=eabi", "-fext-numeric-literals"]
         action = {
             'file': 'main.cpp',
-            'command': "g++ {} main.cpp".format(' '.join(ignore)),
-            'directory': ''}
+            'command': f"g++ {' '.join(ignore)} main.cpp",
+            'directory': '',
+        }
         res = log_parser.parse_options(action)
         self.assertEqual(res.analyzer_options, ["-fsyntax-only"])
 
@@ -444,8 +445,9 @@ class OptionParserTest(unittest.TestCase):
         preserve = ['-nostdinc', '-nostdinc++', '-pedantic']
         action = {
             'file': 'main.cpp',
-            'command': "g++ {} main.cpp".format(' '.join(preserve)),
-            'directory': ''}
+            'command': f"g++ {' '.join(preserve)} main.cpp",
+            'directory': '',
+        }
         res = log_parser.parse_options(action)
         self.assertEqual(res.analyzer_options, preserve)
 
@@ -515,11 +517,13 @@ class OptionParserTest(unittest.TestCase):
         # directory among the implicit include paths. Otherwise this test may
         # fail.
         res = log_parser.parse_options(action, keep_gcc_include_fixed=False)
-        self.assertFalse(any([x.endswith('include-fixed')
-                              for x in res.compiler_includes]))
+        self.assertFalse(
+            any(x.endswith('include-fixed') for x in res.compiler_includes)
+        )
         res = log_parser.parse_options(action, keep_gcc_include_fixed=True)
-        self.assertTrue(any([x.endswith('include-fixed')
-                             for x in res.compiler_includes]))
+        self.assertTrue(
+            any(x.endswith('include-fixed') for x in res.compiler_includes)
+        )
 
     def test_compiler_intrin_headers(self):
         """ Include directories with *intrin.h files should be skipped."""
@@ -531,9 +535,15 @@ class OptionParserTest(unittest.TestCase):
         }
         with tempfile.NamedTemporaryFile(suffix="test-intrin.h") as tmpintrin:
             intrin_dir = os.path.dirname(tmpintrin.name)
-            include_dirs = ["-I", intrin_dir, "-I" + intrin_dir,
-                            "-isystem", intrin_dir, "-isystem" + intrin_dir,
-                            "-I/usr/include"]
+            include_dirs = [
+                "-I",
+                intrin_dir,
+                f"-I{intrin_dir}",
+                "-isystem",
+                intrin_dir,
+                f"-isystem{intrin_dir}",
+                "-I/usr/include",
+            ]
             action['command'] = "g++ " + ' '.join(include_dirs)
 
             print(action)

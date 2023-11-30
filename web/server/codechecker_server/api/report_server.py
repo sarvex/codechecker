@@ -302,8 +302,7 @@ def process_report_filter(
         AND.append(Report.detected_at < date)
 
     if report_filter.date:
-        detected_at = report_filter.date.detected
-        if detected_at:
+        if detected_at := report_filter.date.detected:
             if detected_at.before:
                 detected_before = datetime.fromtimestamp(detected_at.before)
                 AND.append(Report.detected_at <= detected_before)
@@ -312,8 +311,7 @@ def process_report_filter(
                 detected_after = datetime.fromtimestamp(detected_at.after)
                 AND.append(Report.detected_at >= detected_after)
 
-        fixed_at = report_filter.date.fixed
-        if fixed_at:
+        if fixed_at := report_filter.date.fixed:
             if fixed_at.before:
                 fixed_before = datetime.fromtimestamp(fixed_at.before)
                 AND.append(Report.fixed_at <= fixed_before)
@@ -616,9 +614,7 @@ def get_diff_bug_id_filter(run_ids, tag_ids, open_reports_date):
         AND.append(Report.run_id.in_(run_ids))
 
     if tag_ids:
-        AND.append(RunHistory.id.in_(tag_ids))
-        AND.append(get_open_reports_date_filter_query())
-
+        AND.extend((RunHistory.id.in_(tag_ids), get_open_reports_date_filter_query()))
     if open_reports_date:
         date = datetime.fromtimestamp(open_reports_date)
         AND.append(get_open_reports_date_filter_query(Report, date))
@@ -707,7 +703,8 @@ def process_cmp_data_filter(session, run_ids, report_filter, cmp_data):
     else:
         raise codechecker_api_shared.ttypes.RequestFailed(
             codechecker_api_shared.ttypes.ErrorCode.DATABASE,
-            'Unsupported diff type: ' + str(cmp_data.diffType))
+            f'Unsupported diff type: {str(cmp_data.diffType)}',
+        )
 
     return and_(*AND), []
 
@@ -730,8 +727,7 @@ def process_run_history_filter(query, run_ids, run_history_filter):
         if run_history_filter.tagIds:
             query = query.filter(RunHistory.id.in_(run_history_filter.tagIds))
 
-        stored = run_history_filter.stored
-        if stored:
+        if stored := run_history_filter.stored:
             if stored.before:
                 stored_before = datetime.fromtimestamp(stored.before)
                 query = query.filter(RunHistory.time <= stored_before)
@@ -770,19 +766,19 @@ def process_run_filter(session, query, run_filter):
         query = query.filter(Run.date > date)
 
     if run_filter.beforeRun:
-        run = session.query(Run.date) \
-            .filter(Run.name == run_filter.beforeRun) \
+        if (
+            run := session.query(Run.date)
+            .filter(Run.name == run_filter.beforeRun)
             .one_or_none()
-
-        if run:
+        ):
             query = query.filter(Run.date < run.date)
 
     if run_filter.afterRun:
-        run = session.query(Run.date) \
-            .filter(Run.name == run_filter.afterRun) \
+        if (
+            run := session.query(Run.date)
+            .filter(Run.name == run_filter.afterRun)
             .one_or_none()
-
-        if run:
+        ):
             query = query.filter(Run.date > run.date)
 
     return query
@@ -792,8 +788,6 @@ def get_report_details(session, report_ids):
     """
     Returns report details for the given report ids.
     """
-    details = {}
-
     # Get bug path events.
     bug_path_events = session.query(BugPathEvent, File.filepath) \
         .filter(BugPathEvent.report_id.in_(report_ids)) \
@@ -847,14 +841,15 @@ def get_report_details(session, report_ids):
         comment_data = comment_data_db_to_api(data)
         comment_data_list[report_id].append(comment_data)
 
-    for report_id in report_ids:
-        details[report_id] = \
-            ReportDetails(pathEvents=bug_events_list[report_id],
-                          executionPath=bug_point_list[report_id],
-                          extendedData=extended_data_list[report_id],
-                          comments=comment_data_list[report_id])
-
-    return details
+    return {
+        report_id: ReportDetails(
+            pathEvents=bug_events_list[report_id],
+            executionPath=bug_point_list[report_id],
+            extendedData=extended_data_list[report_id],
+            comments=comment_data_list[report_id],
+        )
+        for report_id in report_ids
+    }
 
 
 def bugpathevent_db_to_api(bpe):
@@ -923,8 +918,7 @@ def get_comment_msg(comment):
 
             elements = shlex.split(message)
 
-        system_comment = context.system_comment_map.get(elements[0])
-        if system_comment:
+        if system_comment := context.system_comment_map.get(elements[0]):
             for idx, value in enumerate(elements[1:]):
                 system_comment = system_comment.replace(
                     '{' + str(idx) + '}', html.escape(value))
@@ -1032,12 +1026,7 @@ def check_remove_runs_lock(session, run_ids):
     if run_ids:
         run_locks = run_locks.filter(Run.id.in_(run_ids))
 
-    run_locks = run_locks \
-        .outerjoin(Run,
-                   Run.name == RunLock.name) \
-        .all()
-
-    if run_locks:
+    if run_locks := run_locks.outerjoin(Run, Run.name == RunLock.name).all():
         raise codechecker_api_shared.ttypes.RequestFailed(
             codechecker_api_shared.ttypes.ErrorCode.DATABASE,
             "Can not remove results because the following runs "
@@ -1133,8 +1122,7 @@ def get_commit_url(
         return
 
     for git_commit_url in git_commit_urls:
-        m = git_commit_url["regex"].match(remote_url)
-        if m:
+        if m := git_commit_url["regex"].match(remote_url):
             url = git_commit_url["url"]
             for key, value in m.groupdict().items():
                 if value is not None:
@@ -1148,14 +1136,12 @@ def get_cleanup_plan(session, cleanup_plan_id: int) -> CleanupPlan:
     Check if the given cleanup id exists in the database and returns
     the cleanup. Otherwise it will raise an exception.
     """
-    cleanup_plan = session.query(CleanupPlan).get(cleanup_plan_id)
-
-    if not cleanup_plan:
+    if cleanup_plan := session.query(CleanupPlan).get(cleanup_plan_id):
+        return cleanup_plan
+    else:
         raise codechecker_api_shared.ttypes.RequestFailed(
             codechecker_api_shared.ttypes.ErrorCode.DATABASE,
             f"Cleanup plan '{cleanup_plan_id}' was not found in the database.")
-
-    return cleanup_plan
 
 
 def get_cleanup_plan_report_hashes(
@@ -1331,9 +1317,10 @@ class ThriftRequestHandler:
             args = dict(self.__permission_args)
             args['config_db_session'] = session
 
-            if not any([permissions.require_permission(
-                    perm, args, self._auth_session)
-                    for perm in required]):
+            if not any(
+                permissions.require_permission(perm, args, self._auth_session)
+                for perm in required
+            ):
                 raise codechecker_api_shared.ttypes.RequestFailed(
                     codechecker_api_shared.ttypes.ErrorCode.UNAUTHORIZED,
                     "You are not authorized to execute this action.")
@@ -1566,13 +1553,12 @@ class ThriftRequestHandler:
 
             results = []
             for history in res:
-                analyzer_statistics = {}
-                for stat in history.analyzer_statistics:
-                    analyzer_statistics[stat.analyzer_type] = \
-                        ttypes.AnalyzerStatistics(
-                            failed=stat.failed,
-                            successful=stat.successful)
-
+                analyzer_statistics = {
+                    stat.analyzer_type: ttypes.AnalyzerStatistics(
+                        failed=stat.failed, successful=stat.successful
+                    )
+                    for stat in history.analyzer_statistics
+                }
                 results.append(RunHistoryData(
                     id=history.id,
                     runId=history.run.id,
@@ -1607,15 +1593,16 @@ class ThriftRequestHandler:
         with DBSession(self._Session) as session:
 
             result = session \
-                .query(Report, File) \
-                .filter(Report.id == reportId) \
-                .outerjoin(File, Report.file_id == File.id) \
-                .limit(1).one_or_none()
+                    .query(Report, File) \
+                    .filter(Report.id == reportId) \
+                    .outerjoin(File, Report.file_id == File.id) \
+                    .limit(1).one_or_none()
 
             if not result:
                 raise codechecker_api_shared.ttypes.RequestFailed(
                     codechecker_api_shared.ttypes.ErrorCode.DATABASE,
-                    "Report " + str(reportId) + " not found!")
+                    f"Report {str(reportId)} not found!",
+                )
 
             report, source_file = result
             return ReportData(
@@ -1676,7 +1663,7 @@ class ThriftRequestHandler:
                     return []
 
                 base_hashes = session.query(Report.bug_id.label('bug_id')) \
-                    .outerjoin(File, Report.file_id == File.id)
+                        .outerjoin(File, Report.file_id == File.id)
 
                 if client_version >= (6, 50):
                     base_hashes = base_hashes.filter(
@@ -1693,7 +1680,7 @@ class ThriftRequestHandler:
                 if self._product.driver_name == 'postgresql':
                     new_hashes = select([func.unnest(report_hashes)
                                          .label('bug_id')]) \
-                        .except_(base_hashes).alias('new_bugs')
+                            .except_(base_hashes).alias('new_bugs')
                     return [res[0] for res in session.query(new_hashes)]
                 else:
                     # The maximum number of compound select in sqlite is 500
@@ -1704,10 +1691,18 @@ class ThriftRequestHandler:
                     new_hashes = []
                     for chunk in util.chunks(iter(report_hashes),
                                              SQLITE_MAX_COMPOUND_SELECT):
-                        new_hashes_query = union_all(*[
-                            select([bindparam('bug_id' + str(i), h)
-                                    .label('bug_id')])
-                            for i, h in enumerate(chunk)])
+                        new_hashes_query = union_all(
+                            *[
+                                select(
+                                    [
+                                        bindparam(f'bug_id{str(i)}', h).label(
+                                            'bug_id'
+                                        )
+                                    ]
+                                )
+                                for i, h in enumerate(chunk)
+                            ]
+                        )
                         q = select([new_hashes_query]).except_(base_hashes)
                         new_hashes.extend([res[0] for res in session.query(q)])
 
@@ -1731,13 +1726,13 @@ class ThriftRequestHandler:
 
             elif diff_type == DiffType.UNRESOLVED:
                 results = session.query(Report.bug_id) \
-                    .filter(Report.bug_id.in_(report_hashes))
+                        .filter(Report.bug_id.in_(report_hashes))
 
                 if client_version >= (6, 50):
                     results = results \
-                        .filter(Report.detection_status.notin_(
+                            .filter(Report.detection_status.notin_(
                             skip_statuses_str)) \
-                        .filter(Report.fixed_at.is_(None))
+                            .filter(Report.fixed_at.is_(None))
                     results = filter_open_reports_in_tags(
                         results, run_ids, tag_ids)
                 else:

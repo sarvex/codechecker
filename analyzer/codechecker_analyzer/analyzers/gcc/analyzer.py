@@ -47,7 +47,7 @@ class Gcc(analyzer_base.SourceAnalyzer):
         pass
 
     @classmethod
-    def get_analyzer_mentioned_files(self, output):
+    def get_analyzer_mentioned_files(cls, output):
         """
         This is mostly used for CTU, which is absent in GCC.
         """
@@ -74,13 +74,11 @@ class Gcc(analyzer_base.SourceAnalyzer):
 
         analyzer_cmd.append('-fdiagnostics-format=sarif-stderr')
 
-        for checker_name, value in config.checks().items():
-            if value[0] == CheckerState.disabled:
-                # TODO python3.9 removeprefix method would be nicer
-                # than startswith and a hardcoded slicing
-                analyzer_cmd.append(
-                    codechecker_name_to_actual_name_disabled(checker_name))
-
+        analyzer_cmd.extend(
+            codechecker_name_to_actual_name_disabled(checker_name)
+            for checker_name, value in config.checks().items()
+            if value[0] == CheckerState.disabled
+        )
         compile_lang = self.buildaction.lang
         if not has_flag('-x', analyzer_cmd):
             analyzer_cmd.extend(['-x', compile_lang])
@@ -93,11 +91,11 @@ class Gcc(analyzer_base.SourceAnalyzer):
         return analyzer_cmd
 
     @classmethod
-    def get_analyzer_checkers(self):
+    def get_analyzer_checkers(cls):
         """
         Return the list of the supported checkers.
         """
-        command = [self.analyzer_binary(), "--help=warning"]
+        command = [cls.analyzer_binary(), "--help=warning"]
         checker_list = []
 
         try:
@@ -111,7 +109,7 @@ class Gcc(analyzer_base.SourceAnalyzer):
                     # Rename the checkers interally (similarly to how we
                     # support cppcheck)
                     renamed_checker_name = \
-                        actual_name_to_codechecker_name(warning_name)
+                            actual_name_to_codechecker_name(warning_name)
                     checker_list.append(
                         (renamed_checker_name, description.strip()))
             return checker_list
@@ -140,9 +138,7 @@ class Gcc(analyzer_base.SourceAnalyzer):
     def analyze(self, analyzer_cmd, res_handler, proc_callback=None):
         env = None
 
-        original_env_file = os.environ.get(
-            'CODECHECKER_ORIGINAL_BUILD_ENV')
-        if original_env_file:
+        if original_env_file := os.environ.get('CODECHECKER_ORIGINAL_BUILD_ENV'):
             with open(original_env_file, 'rb') as env_file:
                 env = pickle.load(env_file, encoding='utf-8')
 
@@ -169,17 +165,17 @@ class Gcc(analyzer_base.SourceAnalyzer):
         pass
 
     @classmethod
-    def get_binary_version(self, environ, details=False) -> str:
+    def get_binary_version(cls, environ, details=False) -> str:
         """
         Return the analyzer version.
         """
         # No need to LOG here, we will emit a warning later anyway.
-        if not self.analyzer_binary():
+        if not cls.analyzer_binary():
             return None
         if details:
-            version = [self.analyzer_binary(), '--version']
+            version = [cls.analyzer_binary(), '--version']
         else:
-            version = [self.analyzer_binary(), '-dumpfullversion']
+            version = [cls.analyzer_binary(), '-dumpfullversion']
         try:
             output = subprocess.check_output(version,
                                              env=environ,

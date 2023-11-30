@@ -45,12 +45,12 @@ def main():
     new_init_content = new_init_content.replace(string_to_replace, test_name)
     new_test_content = new_test_content.replace(string_to_replace, test_name)
 
-    print('Creating new funtional test directory: ' + test_name)
+    print(f'Creating new funtional test directory: {test_name}')
     os.makedirs(new_test_path)
 
     print('Generating new test files ...')
     new_init = os.path.join(new_test_path, "__init__.py")
-    new_test = os.path.join(new_test_path, "test_"+test_name+".py")
+    new_test = os.path.join(new_test_path, f"test_{test_name}.py")
 
     with open(new_init, 'w', encoding="utf-8", errors="ignore") as n_init:
         n_init.write(new_init_content)

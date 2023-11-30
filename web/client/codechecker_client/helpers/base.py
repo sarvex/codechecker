@@ -74,7 +74,7 @@ class BaseClientHelper:
         if not session_token:
             return
 
-        headers = {'Cookie': SESSION_COOKIE_NAME + '=' + session_token}
+        headers = {'Cookie': f'{SESSION_COOKIE_NAME}={session_token}'}
         self.transport.setCustomHeaders(headers)
 
     def _reset_token(self):

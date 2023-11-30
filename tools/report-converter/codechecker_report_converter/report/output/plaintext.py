@@ -50,7 +50,7 @@ def format_main_report(report: Report) -> str:
     if line == '':
         return ''
 
-    marker_line = line[0:(report.column - 1)]
+    marker_line = line[:report.column - 1]
     marker_line = ' ' * (len(marker_line) + marker_line.count('\t'))
 
     line = line.replace('\t', '  ')
@@ -134,11 +134,9 @@ def get_file_report_map(
         file_report_map[report.file.path].append(report)
 
     if input_file_path:
-        source_file = __get_source_file_for_analyzer_result_file(
-            input_file_path, metadata)
-
-        # Add source file to the map if it doesn't exists.
-        if source_file:
+        if source_file := __get_source_file_for_analyzer_result_file(
+            input_file_path, metadata
+        ):
             file_report_map[source_file]
 
     return file_report_map

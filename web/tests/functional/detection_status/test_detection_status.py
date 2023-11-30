@@ -69,7 +69,7 @@ class TestDetectionStatus(unittest.TestCase):
             'codechecker_cfg']['check_env']
         codechecker.remove_test_package_product(TEST_WORKSPACE, check_env)
 
-        print("Removing: " + TEST_WORKSPACE)
+        print(f"Removing: {TEST_WORKSPACE}")
         shutil.rmtree(TEST_WORKSPACE, ignore_errors=True)
 
     def setup_method(self, method):
@@ -77,7 +77,7 @@ class TestDetectionStatus(unittest.TestCase):
         self.test_workspace = os.environ['TEST_WORKSPACE']
 
         test_class = self.__class__.__name__
-        print('Running ' + test_class + ' tests in ' + self.test_workspace)
+        print(f'Running {test_class} tests in {self.test_workspace}')
 
         self._codechecker_cfg = env.import_codechecker_cfg(self.test_workspace)
 
@@ -96,9 +96,7 @@ class TestDetectionStatus(unittest.TestCase):
         self._cc_client = env.setup_viewer_client(self.test_workspace)
         self.assertIsNotNone(self._cc_client)
 
-        # Remove all runs before the test cases.
-        runs = self._cc_client.getRunData(None, None, 0, None)
-        if runs:
+        if runs := self._cc_client.getRunData(None, None, 0, None):
             run_id = max(map(lambda run: run.runId, runs))
             self._cc_client.removeRun(run_id, None)
 
@@ -112,7 +110,7 @@ class TestDetectionStatus(unittest.TestCase):
 
         # Init project dir.
         makefile = "all:\n\t$(CXX) -c main.cpp -Wno-division-by-zero " \
-                   "-Wno-all -Wno-extra -o /dev/null\n"
+                       "-Wno-all -Wno-extra -o /dev/null\n"
         project_info = {
             "name": "hello",
             "clean_cmd": "",
@@ -200,7 +198,7 @@ int main()
         self._check_source_file(self._codechecker_cfg)
 
         runs = self._cc_client.getRunData(None, None, 0, None)
-        run_id = max([run.runId for run in runs])
+        run_id = max(run.runId for run in runs)
 
         reports = self._cc_client.getRunResults([run_id],
                                                 100,
@@ -211,8 +209,7 @@ int main()
                                                 False)
 
         self.assertEqual(len(reports), 5)
-        self.assertTrue(
-            all([r.detectionStatus == DetectionStatus.NEW for r in reports]))
+        self.assertTrue(all(r.detectionStatus == DetectionStatus.NEW for r in reports))
 
         # Check the second file version
         self._create_source_file(1)
@@ -359,7 +356,7 @@ int main()
         codechecker.store(self._codechecker_cfg, 'hello')
 
         runs = self._cc_client.getRunData(None, None, 0, None)
-        run_id = max([run.runId for run in runs])
+        run_id = max(run.runId for run in runs)
 
         reports = self._cc_client.getRunResults([run_id],
                                                 100,
@@ -485,7 +482,7 @@ int main()
         cfg['reportdir'] = self._codechecker_cfg['reportdir'] + "2"
 
         orig_test_dir = self._test_dir
-        self._test_dir = self._test_dir + "2"
+        self._test_dir = f"{self._test_dir}2"
         shutil.copytree(orig_test_dir, self._test_dir)
         self._create_source_file(3)
 

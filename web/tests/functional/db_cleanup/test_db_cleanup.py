@@ -60,14 +60,14 @@ class TestDbCleanup(unittest.TestCase):
 
         global TEST_WORKSPACE
 
-        print("Removing: " + TEST_WORKSPACE)
+        print(f"Removing: {TEST_WORKSPACE}")
         shutil.rmtree(TEST_WORKSPACE, ignore_errors=True)
 
     def setup_method(self, method):
         self.test_workspace = os.environ['TEST_WORKSPACE']
 
         test_class = self.__class__.__name__
-        print('Running ' + test_class + ' tests in ' + self.test_workspace)
+        print(f'Running {test_class} tests in {self.test_workspace}')
 
         self.codechecker_cfg = env.import_codechecker_cfg(self.test_workspace)
         self.test_dir = os.path.join(self.test_workspace, 'test_files')
@@ -88,7 +88,7 @@ class TestDbCleanup(unittest.TestCase):
         copytree(self.orig_checker_labels_dir, self.workspace_labels_dir)
 
         self.codechecker_cfg['check_env']['CC_TEST_LABELS_DIR'] = \
-            self.workspace_labels_dir
+                self.workspace_labels_dir
 
     def __create_test_dir(self):
         makefile = "all:\n\t$(CXX) -c a/main.cpp -o /dev/null\n"
@@ -198,9 +198,9 @@ int f(int x) { return 1 / x; }
 
         server_access = codechecker.start_server(self.codechecker_cfg, event)
         server_access['viewer_port'] \
-            = self.codechecker_cfg['viewer_port']
+                = self.codechecker_cfg['viewer_port']
         server_access['viewer_product'] \
-            = self.codechecker_cfg['viewer_product']
+                = self.codechecker_cfg['viewer_product']
 
         codechecker.add_test_package_product(server_access,
                                              self.test_workspace)
@@ -290,14 +290,14 @@ int f(int x) { return 1 / x; }
 
         # Change severity level of core.DivideZero to LOW.
         with open(os.path.join(self.workspace_labels_dir, 'analyzers',
-                               'clangsa.json'), 'r+',
-                  encoding='utf-8', errors='ignore') as labels_cgf_file:
+                                   'clangsa.json'), 'r+',
+                      encoding='utf-8', errors='ignore') as labels_cgf_file:
             checker_labels = json.load(labels_cgf_file)
             checker_labels['labels']['core.DivideZero'][-1] = 'severity:LOW'
 
             labels_cgf_file.seek(0)
             labels_cgf_file.truncate()
-            labels_cgf_file.write(str(json.dumps(checker_labels)))
+            labels_cgf_file.write(json.dumps(checker_labels))
 
         self.codechecker_cfg['viewer_port'] = env.get_free_port()
         env.export_test_cfg(self.test_workspace,

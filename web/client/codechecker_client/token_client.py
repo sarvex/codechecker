@@ -64,12 +64,14 @@ def handle_list_tokens(args):
         print(CmdLineOutputEncoder().encode(tokens))
     else:  # plaintext, csv
         header = ['Token', 'Description', 'Last access']
-        rows = []
-        for res in tokens:
-            rows.append((res.token,
-                         res.description if res.description else '',
-                         res.lastAccess))
-
+        rows = [
+            (
+                res.token,
+                res.description if res.description else '',
+                res.lastAccess,
+            )
+            for res in tokens
+        ]
         print(twodim.to_str(args.output_format, header, rows))
 
 
@@ -84,12 +86,10 @@ def handle_del_token(args):
 
     token = args.token
     try:
-        success = client.removeToken(token)
-
-        if success:
-            print("'" + token + "' has been successfully removed.")
+        if success := client.removeToken(token):
+            print(f"'{token}' has been successfully removed.")
         else:
-            print("Error: '" + token + "' can not be removed.")
+            print(f"Error: '{token}' can not be removed.")
     except Exception as ex:
         LOG.error("Failed to remove the token!")
         LOG.error(ex)

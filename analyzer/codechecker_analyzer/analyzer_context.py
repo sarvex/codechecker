@@ -147,13 +147,11 @@ class Context(metaclass=Singleton):
             self._data_files_dir_path, "config", "package_layout.json")
 
         LOG.debug('Reading config: %s', layout_cfg_file)
-        lcfg_dict = load_json(layout_cfg_file)
-
-        if not lcfg_dict:
+        if lcfg_dict := load_json(layout_cfg_file):
+            return lcfg_dict
+        else:
             raise ValueError(f"No configuration file '{layout_cfg_file}' can "
                              f"be found or it is empty!")
-
-        return lcfg_dict
 
     def __init_env(self):
         """ Set environment variables. """
@@ -181,27 +179,22 @@ class Context(metaclass=Singleton):
         package_git_dirtytag = vfile_data.get('git_describe', {}).get('dirty')
 
         self.__package_version = package_version['major'] + '.' + \
-            package_version['minor'] + '.' + \
-            package_version['revision'] + \
-            ('-rc' + package_version['rc'] if 'rc' in package_version and
+                package_version['minor'] + '.' + \
+                package_version['revision'] + \
+                ('-rc' + package_version['rc'] if 'rc' in package_version and
              package_version['rc'] else '')
 
         self.__package_build_date = package_build_date
         self.__package_git_hash = package_git_hash
 
         self.__package_git_tag = package_git_tag
-        if (LOG.getEffectiveLevel() == logger.DEBUG or
-                LOG.getEffectiveLevel() ==
-                logger.DEBUG_ANALYZER):
+        if LOG.getEffectiveLevel() in [logger.DEBUG, logger.DEBUG_ANALYZER]:
             self.__package_git_tag = package_git_dirtytag
 
     def __populate_analyzers(self):
         """ Set analyzer binaries for each registered analyzers. """
-        analyzer_env = None
         analyzer_from_path = env.is_analyzer_from_path()
-        if not analyzer_from_path:
-            analyzer_env = self.analyzer_env
-
+        analyzer_env = self.analyzer_env if not analyzer_from_path else None
         env_var_bin = self.__parse_CC_ANALYZER_BIN()
 
         compiler_binaries = self.pckg_layout.get('analyzers')
@@ -304,10 +297,7 @@ class Context(metaclass=Singleton):
             return []
 
         extra_paths = self.pckg_layout.get('path_env_extra', [])
-        paths = []
-        for path in extra_paths:
-            paths.append(os.path.join(self._data_files_dir_path, path))
-        return paths
+        return [os.path.join(self._data_files_dir_path, path) for path in extra_paths]
 
     @property
     def ld_lib_path_extra(self):
@@ -315,10 +305,7 @@ class Context(metaclass=Singleton):
             return []
 
         extra_lib = self.pckg_layout.get('ld_lib_path_extra', [])
-        ld_paths = []
-        for path in extra_lib:
-            ld_paths.append(os.path.join(self._data_files_dir_path, path))
-        return ld_paths
+        return [os.path.join(self._data_files_dir_path, path) for path in extra_lib]
 
     @property
     def analyzer_env(self):

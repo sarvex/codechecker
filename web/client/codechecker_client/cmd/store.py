@@ -371,16 +371,10 @@ def filter_source_files_with_comments(
     """
     jobs = file_report_positions.items()
 
-    # Currently ProcessPoolExecutor fails completely in windows.
-    # Reason is most likely combination of venv and fork() not
-    # being present in windows, so stuff like setting up
-    # PYTHONPATH in parent CodeChecker before store is executed
-    # are lost.
     if sys.platform == "win32":
         return get_source_file_with_comments(jobs)
-    else:
-        with ProcessPoolExecutor() as executor:
-            return get_source_file_with_comments(jobs, executor.map)
+    with ProcessPoolExecutor() as executor:
+        return get_source_file_with_comments(jobs, executor.map)
 
 
 def get_reports(
@@ -570,8 +564,11 @@ def assemble_zip(inputs,
                     zipf.write(f, file_path)
 
         if necessary_blame_hashes:
-            file_paths = list(f for f, h in file_to_hash.items()
-                              if h in necessary_blame_hashes)
+            file_paths = [
+                f
+                for f, h in file_to_hash.items()
+                if h in necessary_blame_hashes
+            ]
 
             LOG.info("Collecting blame information for source files...")
             try:
@@ -635,10 +632,11 @@ def should_be_zipped(input_file: str, input_files: Iterable[str]) -> bool:
     Compiler includes and target files should only be included if there is
     no compiler info file present.
     """
-    return (input_file in ['metadata.json', 'compiler_info.json']
-            or (input_file in ['compiler_includes.json',
-                               'compiler_target.json']
-                and 'compiler_info.json' not in input_files))
+    return (
+        input_file in {'metadata.json', 'compiler_info.json'}
+        or input_file in {'compiler_includes.json', 'compiler_target.json'}
+        and 'compiler_info.json' not in input_files
+    )
 
 
 def get_analysis_statistics(inputs, limits):
@@ -847,8 +845,7 @@ def main(args):
 
     if 'name' not in args:
         LOG.debug("Generating name for analysis...")
-        generated = __get_run_name(args.input)
-        if generated:
+        if generated := __get_run_name(args.input):
             setattr(args, 'name', generated)
         else:
             LOG.error("No suitable name was found in the inputs for the "

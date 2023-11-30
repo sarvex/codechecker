@@ -43,18 +43,15 @@ def print_analyzer_statistic_summary(metadata_analyzers, status, msg=None):
     Print analyzer statistic summary for the given status code with the given
     section heading message.
     """
-    has_status = False
-    for _, analyzer in metadata_analyzers.items():
-        if analyzer.get('analyzer_statistics', {}).get(status):
-            has_status = True
-            break
-
+    has_status = any(
+        analyzer.get('analyzer_statistics', {}).get(status)
+        for _, analyzer in metadata_analyzers.items()
+    )
     if has_status and msg:
         LOG.info(msg)
 
     for analyzer_type, analyzer in metadata_analyzers.items():
-        res = analyzer.get('analyzer_statistics', {}).get(status)
-        if res:
+        if res := analyzer.get('analyzer_statistics', {}).get(status):
             LOG.info("  %s: %s", analyzer_type, res)
 
 
@@ -64,13 +61,13 @@ def worker_result_handler(results, metadata_tool, output_path):
     reanalyzed_num = 0
     metadata_analyzers = metadata_tool['analyzers']
     for res, skipped, reanalyzed, analyzer_type, _, sources in results:
-        statistics = metadata_analyzers[analyzer_type]['analyzer_statistics']
         if skipped:
             skipped_num += 1
         else:
             if reanalyzed:
                 reanalyzed_num += 1
 
+            statistics = metadata_analyzers[analyzer_type]['analyzer_statistics']
             if res == 0:
                 statistics['successful'] += 1
                 statistics['successful_sources'].append(sources)
@@ -107,7 +104,7 @@ def worker_result_handler(results, metadata_tool, output_path):
 
     for f in glob.glob(os.path.join(output_path, 'failed', "*.error")):
         err_file, _ = os.path.splitext(f)
-        plist_file = os.path.basename(err_file) + ".plist"
+        plist_file = f"{os.path.basename(err_file)}.plist"
         plist_file = os.path.join(output_path, plist_file)
         metadata_tool['result_source_files'].pop(plist_file, None)
 
@@ -128,13 +125,11 @@ def init_worker(checked_num, action_num):
 def save_output(base_file_name, out, err):
     try:
         if out:
-            with open(base_file_name + ".stdout.txt", 'w',
-                      encoding="utf-8", errors="ignore") as outf:
+            with open(f"{base_file_name}.stdout.txt", 'w', encoding="utf-8", errors="ignore") as outf:
                 outf.write(out)
 
         if err:
-            with open(base_file_name + ".stderr.txt", 'w',
-                      encoding="utf-8", errors="ignore") as outf:
+            with open(f"{base_file_name}.stderr.txt", 'w', encoding="utf-8", errors="ignore") as outf:
                 outf.write(err)
     except IOError as ioerr:
         LOG.debug("Failed to save analyzer output")
@@ -146,8 +141,7 @@ def save_metadata(result_file, analyzer_result_file, analyzed_source_file):
     Save some extra information next to the plist, .source
     acting as an extra metadata file.
     """
-    with open(result_file + ".source", 'w',
-              encoding="utf-8", errors="ignore") as orig:
+    with open(f"{result_file}.source", 'w', encoding="utf-8", errors="ignore") as orig:
         orig.write(analyzed_source_file.replace(r'\ ', ' ') + "\n")
 
     if os.path.exists(analyzer_result_file) and \
@@ -303,9 +297,9 @@ def handle_reproducer(source_analyzer, rh, zip_file, actions_map):
             )
         archive.writestr("return-code", str(rh.analyzer_returncode))
 
-        toolchain = gcc_toolchain.toolchain_in_args(
-            shlex.split(action.original_command))
-        if toolchain:
+        if toolchain := gcc_toolchain.toolchain_in_args(
+            shlex.split(action.original_command)
+        ):
             archive.writestr("gcc-toolchain-path", toolchain)
 
         compiler_info_file = os.path.join(rh.workspace, 'compiler_info.json')
@@ -334,7 +328,7 @@ def handle_failure(
         rh.postprocess_result(skip_handlers)
 
     # Remove files that successfully analyzed earlier on.
-    plist_file = result_base + ".plist"
+    plist_file = f"{result_base}.plist"
     if os.path.exists(plist_file):
         os.remove(plist_file)
 
@@ -668,8 +662,7 @@ def check(check_data):
                     LOG.error("Analyzing '%s' with %s without CTU failed.",
                               source_file_name, action.analyzer_type)
 
-                    handle_analysis_result(success=False,
-                                           zip_file=result_base + '.zip')
+                    handle_analysis_result(success=False, zip_file=f'{result_base}.zip')
 
         collect_ctu_involved_files(rh, source_analyzer,
                                    output_dirs['ctu_connections'])

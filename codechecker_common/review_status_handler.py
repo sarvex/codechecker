@@ -131,16 +131,12 @@ class ReviewStatusHandler:
         review status returns. This function throws ValueError if the review
         status is ambiguous (see get_review_status_from_source()).
         """
-        # 1. Check if the report has in-source review status setting.
-        review_status = self.get_review_status_from_source(report)
-
-        if review_status:
+        if review_status := self.get_review_status_from_source(report):
             return review_status
 
         # 2. Check if the report has review status setting in the yaml config.
         if self.__data:
-            review_status = self.get_review_status_from_config(report)
-            if review_status:
+            if review_status := self.get_review_status_from_config(report):
                 return review_status
 
         # 3. Return "unreviewed" otherwise.

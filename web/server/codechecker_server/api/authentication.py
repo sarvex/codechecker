@@ -88,10 +88,7 @@ class ThriftAuthHandler:
 
     @timeit
     def getLoggedInUser(self):
-        if self.__auth_session:
-            return self.__auth_session.user
-        else:
-            return ""
+        return self.__auth_session.user if self.__auth_session else ""
 
     @timeit
     def getAcceptedAuthMethods(self):
@@ -117,10 +114,10 @@ class ThriftAuthHandler:
 
             product_permissions = {}
             q = session \
-                .query(Product.endpoint, ProductPermission) \
-                .outerjoin(Product,
+                    .query(Product.endpoint, ProductPermission) \
+                    .outerjoin(Product,
                            ProductPermission.product_id == Product.id) \
-                .all()
+                    .all()
 
             for endpoint, product_permission in q:
                 if endpoint not in product_permissions:
@@ -135,8 +132,7 @@ class ThriftAuthHandler:
                 else:
                     product_permissions[endpoint].user[name].append(perm)
 
-        default_superuser = self.__manager.default_superuser_name
-        if default_superuser:
+        if default_superuser := self.__manager.default_superuser_name:
             global_permissions.user[default_superuser].append("SUPERUSER")
 
         return AccessControl(
@@ -154,14 +150,12 @@ class ThriftAuthHandler:
             user_name, _ = auth_string.split(':', 1)
             LOG.debug("'%s' logging in...", user_name)
 
-            session = self.__manager.create_session(auth_string)
-
-            if session:
+            if session := self.__manager.create_session(auth_string):
                 LOG.info("'%s' logged in.", user_name)
                 return session.token
             else:
                 msg = "Invalid credentials supplied for user '{0}'. " \
-                      "Refusing authentication!".format(user_name)
+                          "Refusing authentication!".format(user_name)
 
                 LOG.warning(msg)
                 raise codechecker_api_shared.ttypes.RequestFailed(
@@ -177,10 +171,7 @@ class ThriftAuthHandler:
         user_name = self.getLoggedInUser()
         LOG.debug("'%s' logging out...", user_name)
 
-        token = None
-        if self.__auth_session:
-            token = self.__auth_session.token
-
+        token = self.__auth_session.token if self.__auth_session else None
         is_logged_out = self.__manager.invalidate(token)
         if is_logged_out:
             LOG.info("'%s' logged out.", user_name)
@@ -422,15 +413,11 @@ class ThriftAuthHandler:
         with DBSession(self.__config_db) as session:
             user = self.getLoggedInUser()
             sessionTokens = session.query(Session) \
-                .filter(Session.user_name == user) \
-                .filter(Session.can_expire.is_(False)) \
-                .all()
+                    .filter(Session.user_name == user) \
+                    .filter(Session.can_expire.is_(False)) \
+                    .all()
 
-            result = []
-            for t in sessionTokens:
-                result.append(SessionTokenData(
-                    t.token,
-                    t.description,
-                    str(t.last_access)))
-
-            return result
+            return [
+                SessionTokenData(t.token, t.description, str(t.last_access))
+                for t in sessionTokens
+            ]

@@ -29,5 +29,6 @@ CLIENT_API = '{0}.{1}'.format(
 
 
 def get_version_str():
-    return ', '.join(["v" + str(v) + "." + str(SUPPORTED_VERSIONS[v])
-                      for v in SUPPORTED_VERSIONS])
+    return ', '.join(
+        [f"v{str(v)}.{str(SUPPORTED_VERSIONS[v])}" for v in SUPPORTED_VERSIONS]
+    )

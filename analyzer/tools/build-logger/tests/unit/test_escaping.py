@@ -238,7 +238,7 @@ int main() {
         self.assume_successful_command(
             [
                 "gcc",
-                fr'-DVARIABLE="my-email@address.com"',
+                '-DVARIABLE="my-email@address.com"',
                 file,
                 "-Werror",
                 "-o",
@@ -247,9 +247,7 @@ int main() {
             logger_env,
         )
         self.assume_successful_command(
-            [binary],
-            env=empty_env,
-            outs=fr'--"my-email@address.com"--',
+            [binary], env=empty_env, outs='--"my-email@address.com"--'
         )
         self.assert_json(
             command=fr'gcc -DVARIABLE='

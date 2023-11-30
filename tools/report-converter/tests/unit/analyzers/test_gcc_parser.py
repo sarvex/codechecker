@@ -55,7 +55,7 @@ class GCCAnalyzerResultTestCase(unittest.TestCase):
 
         global TEST_WORKSPACE
 
-        print("Removing: " + TEST_WORKSPACE)
+        print(f"Removing: {TEST_WORKSPACE}")
         shutil.rmtree(TEST_WORKSPACE, ignore_errors=True)
 
     def test_no_plist_file(self):

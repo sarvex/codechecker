@@ -23,14 +23,11 @@ LOG = get_logger('system')
 def arg_match(options, args):
     """Checks and selects the option string specified in 'options'
     that are present in parameter 'args'."""
-    matched_args = []
-    for option in options:
-        if any([arg if option.startswith(arg) else None
-                for arg in args]):
-            matched_args.append(option)
-            continue
-
-    return matched_args
+    return [
+        option
+        for option in options
+        if any(arg if option.startswith(arg) else None for arg in args)
+    ]
 
 
 def chunks(iterator, n):

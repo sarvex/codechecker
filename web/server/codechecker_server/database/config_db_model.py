@@ -59,8 +59,7 @@ class Product(Base):
         self.description = description
         self.run_limit = run_limit
         self.report_limit = report_limit
-        self.is_review_status_change_disabled = \
-            True if is_review_status_change_disabled else False
+        self.is_review_status_change_disabled = bool(is_review_status_change_disabled)
         self.confidentiality = confidentiality
 
 

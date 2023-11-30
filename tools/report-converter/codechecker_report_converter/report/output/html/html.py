@@ -299,9 +299,9 @@ class HtmlBuilder:
         # Sort reports based on file path levels.
         html_report_links: List[HtmlReportLink] = []
         for html_file, reports in self.generated_html_reports.items():
-            for report in reports:
-                html_report_links.append({'link': html_file, 'report': report})
-
+            html_report_links.extend(
+                {'link': html_file, 'report': report} for report in reports
+            )
         html_report_links.sort(
             key=lambda data: self.files[data['report']['fileId']]['filePath'])
 
@@ -324,17 +324,16 @@ class HtmlBuilder:
                 report = data['report']
 
                 severity = report['severity'].lower() \
-                    if 'severity' in report \
-                    and report['severity'] is not None \
-                    else ''
+                        if 'severity' in report \
+                        and report['severity'] is not None \
+                        else ''
 
                 review_status = report['reviewStatus'] \
-                    if 'reviewStatus' in report and \
-                    report['reviewStatus'] is not None \
-                    else ''
+                        if 'reviewStatus' in report and \
+                        report['reviewStatus'] is not None \
+                        else ''
 
-                events = report['events']
-                if events:
+                if events := report['events']:
                     line = events[-1]['line']
                     message = events[-1]['message']
                     bug_path_length = len(events)
@@ -347,10 +346,9 @@ class HtmlBuilder:
                 file_path = self.files[report['fileId']]['filePath']
 
                 checker = report['checker']
-                doc_url = checker.get('url')
-                if doc_url:
+                if doc_url := checker.get('url'):
                     checker_name_col_content = f'<a href="{doc_url}" '\
-                        f'target="_blank">{checker["name"]}</a>'
+                            f'target="_blank">{checker["name"]}</a>'
                 else:
                     checker_name_col_content = checker["name"]
 
@@ -549,9 +547,9 @@ def parse(
         LOG.info(f"\nParsing input file '%s'", file_path)
 
         reports = report_file.get_reports(file_path)
-        changed_source = convert(file_path, reports, output_path, html_builder)
-
-        if changed_source:
+        if changed_source := convert(
+            file_path, reports, output_path, html_builder
+        ):
             changed_source_files.update(changed_source)
 
     return changed_source_files

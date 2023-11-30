@@ -205,12 +205,11 @@ def __guideline_to_label(
 
     if args.guideline in guidelines:
         return f'guideline:{args.guideline}'
-    else:
-        if args.guideline.find(':') == -1:
-            LOG.error('--guideline parameter is either <guideline> or '
-                      '<guideline>:<rule>')
-            sys.exit(1)
-        return args.guideline
+    if args.guideline.find(':') == -1:
+        LOG.error('--guideline parameter is either <guideline> or '
+                  '<guideline>:<rule>')
+        sys.exit(1)
+    return args.guideline
 
 
 def __get_detailed_checker_info(
@@ -319,11 +318,10 @@ def __print_guidelines(args: argparse.Namespace, cl: CheckerLabels):
     if args.output_format == 'custom':
         args.output_format = 'rows'
 
-    result = {}
-
-    for guideline in cl.get_description('guideline'):
-        result[guideline] = set(cl.occurring_values(guideline))
-
+    result = {
+        guideline: set(cl.occurring_values(guideline))
+        for guideline in cl.get_description('guideline')
+    }
     header = ['Guideline', 'Rules']
     if args.output_format in ['csv', 'json']:
         header = list(map(__uglify, header))
@@ -335,8 +333,8 @@ def __print_guidelines(args: argparse.Namespace, cl: CheckerLabels):
 
     if args.output_format == 'rows':
         for row in rows:
-            print('Guideline: {}'.format(row[0]))
-            print('Rules: {}'.format(row[1]))
+            print(f'Guideline: {row[0]}')
+            print(f'Rules: {row[1]}')
     else:
         print(twodim.to_str(args.output_format, header, rows))
 
@@ -367,13 +365,11 @@ def __print_label_values(args: argparse.Namespace, cl: CheckerLabels):
     if args.output_format == 'custom':
         args.output_format = 'rows'
 
-    header = ['Value']
     if args.output_format == 'custom':
         args.output_format = 'rows'
 
-    rows = list(map(lambda x: (x,), cl.occurring_values(args.label)))
-
-    if rows:
+    if rows := list(map(lambda x: (x,), cl.occurring_values(args.label))):
+        header = ['Value']
         print(twodim.to_str(args.output_format, header, rows))
     else:
         LOG.info(
@@ -526,11 +522,7 @@ def __print_checker_config(args: argparse.Namespace):
         args.analyzers)
     analyzer_types.check_available_analyzers(working_analyzers, errored)
 
-    if 'details' in args:
-        header = ['Option', 'Description']
-    else:
-        header = ['Option']
-
+    header = ['Option', 'Description'] if 'details' in args else ['Option']
     if args.output_format in ['csv', 'json']:
         header = list(map(__uglify, header))
 
@@ -545,10 +537,8 @@ def __print_checker_config(args: argparse.Namespace):
             if analyzer != "cppcheck":
                 analyzer_failures.append(analyzer)
                 continue
-            # TODO
-            if analyzer != "gcc":
-                analyzer_failures.append(analyzer)
-                continue
+            analyzer_failures.append(analyzer)
+            continue
 
         rows.extend((':'.join((analyzer, c[0])), c[1]) if 'details' in args
                     else (':'.join((analyzer, c[0])),) for c in configs)

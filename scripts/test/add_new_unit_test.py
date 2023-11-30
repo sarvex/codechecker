@@ -26,10 +26,10 @@ def main():
 
     current_dir = os.path.dirname(os.path.realpath(__file__))
     unit_test_path = os.path.join(current_dir, 'unit')
-    test_file_name = 'test_' + tested_module + '.py'
+    test_file_name = f'test_{tested_module}.py'
     new_test = os.path.join(unit_test_path, test_file_name)
     if os.path.exists(new_test):
-        print("Unit test already exists: " + new_test)
+        print(f"Unit test already exists: {new_test}")
         sys.exit(1)
 
     template = os.path.join(unit_test_path, 'unit_template.py')

@@ -83,8 +83,7 @@ def trim_path_prefixes(path: str, prefixes: Optional[List[str]]) -> str:
 
         prefix_matcher = re.compile(regex_str[:-2])
 
-        matches = prefix_matcher.match(path)
-        if matches:
+        if matches := prefix_matcher.match(path):
             matching_prefix = matches[0]
             if not longest_matching_prefix or \
                     len(longest_matching_prefix) < len(matching_prefix):

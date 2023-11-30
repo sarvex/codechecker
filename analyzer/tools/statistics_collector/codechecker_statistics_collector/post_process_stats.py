@@ -44,9 +44,11 @@ def process(input_dir, output_dir,
 
     clang_outs = []
     try:
-        for f in os.listdir(input_dir):
-            if os.path.isfile(os.path.join(input_dir, f)):
-                clang_outs.append(os.path.join(input_dir, f))
+        clang_outs.extend(
+            os.path.join(input_dir, f)
+            for f in os.listdir(input_dir)
+            if os.path.isfile(os.path.join(input_dir, f))
+        )
     except OSError as oerr:
         LOG.debug(oerr)
         LOG.debug("Statistics can not be collected.")

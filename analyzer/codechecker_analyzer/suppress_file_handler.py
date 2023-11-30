@@ -57,8 +57,9 @@ def get_suppress_data(suppress_file):
     suppress_data = []
     for line in suppress_file:
 
-        src_suppress_format_match = re.match(src_suppress_format, line.strip())
-        if src_suppress_format_match:
+        if src_suppress_format_match := re.match(
+            src_suppress_format, line.strip()
+        ):
             LOG.debug('Match for source code suppress entry format:')
             src_suppress_format_match = src_suppress_format_match.groupdict()
             LOG.debug(src_suppress_format_match)
@@ -68,8 +69,7 @@ def get_suppress_data(suppress_file):
                                   src_suppress_format_match['status']))
             continue
 
-        new_format_match = re.match(new_format, line.strip())
-        if new_format_match:
+        if new_format_match := re.match(new_format, line.strip()):
             LOG.debug('Match for new suppress entry format:')
             new_format_match = new_format_match.groupdict()
             LOG.debug(new_format_match)
@@ -79,8 +79,7 @@ def get_suppress_data(suppress_file):
                                   'false_positive'))
             continue
 
-        old_format_match = re.match(old_format, line.strip())
-        if old_format_match:
+        if old_format_match := re.match(old_format, line.strip()):
             LOG.debug('Match for old suppress entry format:')
             old_format_match = old_format_match.groupdict()
             LOG.debug(old_format_match)
@@ -106,15 +105,13 @@ def write_to_suppress_file(suppress_file, value, file_name, comment='',
                   encoding='utf-8', errors='ignore') as s_file:
             suppress_data = get_suppress_data(s_file)
 
-        if not os.stat(suppress_file)[6] == 0:
-            # File is not empty.
-
-            res = [
-                x for x in suppress_data if (
-                    x[0] == value and x[1] == file_name) or (
-                    x[0] == value and x[1] == '')]
-
-            if res:
+        if os.stat(suppress_file)[6] != 0:
+            if res := [
+                x
+                for x in suppress_data
+                if (x[0] == value and x[1] == file_name)
+                or (x[0] == value and x[1] == '')
+            ]:
                 LOG.debug("Already found in\n %s", suppress_file)
                 return True
 

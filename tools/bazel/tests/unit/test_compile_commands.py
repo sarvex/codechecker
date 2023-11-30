@@ -24,10 +24,10 @@ class BazelCompileCommandsTest(unittest.TestCase):
     TEST_COMPILE_COMMANDS_FILENAME = "test_compile_commands.json"
 
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         """ Initialize test files. """
-        self.initial_dir = os.getcwd()
-        self.test_proj_dir = os.path.abspath(os.environ["TEST_PROJ"])
+        cls.initial_dir = os.getcwd()
+        cls.test_proj_dir = os.path.abspath(os.environ["TEST_PROJ"])
 
     def setUp(self):
         """ Restore initial state. """

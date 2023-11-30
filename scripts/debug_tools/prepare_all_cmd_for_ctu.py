@@ -122,7 +122,7 @@ if __name__ == '__main__':
     analyzer_command_debug = "analyzer-command_DEBUG"
     target = get_triple_arch('./analyzer-command')
     with open(analyzer_command_debug, 'w',
-              encoding="utf-8", errors="ignore") as f:
+                  encoding="utf-8", errors="ignore") as f:
         f.write(
             prepare_analyzer_cmd.prepare(
                 "./analyzer-command",
@@ -131,7 +131,10 @@ if __name__ == '__main__':
                     args.clang,
                     args.clang_plugin_name,
                     args.clang_plugin_path,
-                    "./report_debug/ctu-dir/" + target)))
+                    f"./report_debug/ctu-dir/{target}",
+                ),
+            )
+        )
 
     print(
         "Preparation of files for debugging is done. "

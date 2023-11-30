@@ -52,7 +52,7 @@ class TestCtu(unittest.TestCase):
         # and print out the path.
         global TEST_WORKSPACE
 
-        print('Removing: ' + TEST_WORKSPACE)
+        print(f'Removing: {TEST_WORKSPACE}')
         shutil.rmtree(TEST_WORKSPACE)
 
     def setup_method(self, method):
@@ -64,11 +64,9 @@ class TestCtu(unittest.TestCase):
         Set up workspace with a given parameters. If called multiple times,
         teardown_method() must be called before this function.
         """
-        # TEST_WORKSPACE is automatically set by test package __init__.py .
-        self.test_workspace = os.environ['TEST_WORKSPACE']
-
         test_class = self.__class__.__name__
-        print('Running ' + test_class + ' tests in ' + self.test_workspace)
+        self.test_workspace = os.environ['TEST_WORKSPACE']
+        print(f'Running {test_class} tests in {self.test_workspace}')
 
         # Get the CodeChecker cmd if needed for the tests.
         self._codechecker_cmd = env.codechecker_cmd()
@@ -82,12 +80,12 @@ class TestCtu(unittest.TestCase):
         output, _, result = call_command(cmd, cwd=self.test_dir, env=self.env)
         self.assertEqual(result, 0, "Analyzing failed.")
         setattr(self, CTU_ATTR, is_ctu_capable(output))
-        print("'analyze' reported CTU-compatibility? " +
-              str(getattr(self, CTU_ATTR)))
+        print(f"'analyze' reported CTU-compatibility? {str(getattr(self, CTU_ATTR))}")
 
         setattr(self, ON_DEMAND_ATTR, is_ctu_on_demand_capable(output))
-        print("'analyze' reported CTU-on-demand-compatibility? " +
-              str(getattr(self, ON_DEMAND_ATTR)))
+        print(
+            f"'analyze' reported CTU-on-demand-compatibility? {str(getattr(self, ON_DEMAND_ATTR))}"
+        )
 
         self.buildlog = os.path.join(self.test_workspace, buildlog_json)
 
@@ -382,9 +380,17 @@ class TestCtu(unittest.TestCase):
     def test_ctu_makefile_generation(self):
         """ Test makefile generation in CTU mode. """
 
-        cmd = [self._codechecker_cmd, 'analyze', '-o', self.report_dir,
-               '--analyzers', 'clangsa', '--ctu', '--makefile']
-        cmd.append(self.buildlog)
+        cmd = [
+            self._codechecker_cmd,
+            'analyze',
+            '-o',
+            self.report_dir,
+            '--analyzers',
+            'clangsa',
+            '--ctu',
+            '--makefile',
+            self.buildlog,
+        ]
         _, _, result = call_command(cmd, cwd=self.test_dir, env=self.env)
         self.assertEqual(result, 0, "Analyzing failed.")
 

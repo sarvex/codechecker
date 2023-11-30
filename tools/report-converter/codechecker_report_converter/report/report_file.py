@@ -24,8 +24,9 @@ LOG = logging.getLogger('report-converter')
 SUPPORTED_ANALYZER_TYPES = tuple(sorted([plist.EXTENSION, sarif.EXTENSION]))
 
 
-SUPPORTED_ANALYZER_EXTENSIONS = \
-    tuple([f".{ext}" for ext in SUPPORTED_ANALYZER_TYPES])
+SUPPORTED_ANALYZER_EXTENSIONS = tuple(
+    f".{ext}" for ext in SUPPORTED_ANALYZER_TYPES
+)
 
 
 def is_supported(analyzer_result_file_path: str) -> bool:
@@ -55,9 +56,9 @@ def get_reports(
     source_dir_path: Optional[str] = None
 ) -> List[Report]:
     """ Get reports from the given report file. """
-    parser = get_parser(analyzer_result_file_path, checker_labels, file_cache)
-
-    if parser:
+    if parser := get_parser(
+        analyzer_result_file_path, checker_labels, file_cache
+    ):
         return parser.get_reports(analyzer_result_file_path, source_dir_path)
     else:
         LOG.error(f"Found no parsers to parse {analyzer_result_file_path}! "
@@ -74,9 +75,7 @@ def create(
     analyzer_info: Optional[AnalyzerInfo] = None
 ):
     """ Creates an analyzer output file from the given reports. """
-    parser = get_parser(output_file_path, checker_labels)
-
-    if parser:
+    if parser := get_parser(output_file_path, checker_labels):
         data = parser.convert(reports, analyzer_info)
         parser.write(data, output_file_path)
 
@@ -86,9 +85,7 @@ def replace_report_hash(
     hash_type=HashType.CONTEXT_FREE
 ):
     """ Override hash in the given file by using the given version hash. """
-    parser = get_parser(analyzer_result_file_path)
-
-    if parser:
+    if parser := get_parser(analyzer_result_file_path):
         parser.replace_report_hash(
             analyzer_result_file_path, hash_type)
 

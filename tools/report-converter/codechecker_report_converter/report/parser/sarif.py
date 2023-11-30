@@ -122,12 +122,8 @@ class Parser(BaseParser):
         explicitly state whether this is the list of available checkers, or
         enabled checkers, unfortunately.
         """
-        rules: Dict[str, Dict] = {}
-
         driver = data["tool"]["driver"]
-        for rule in driver.get("rules", []):
-            rules[rule["id"]] = rule
-
+        rules: Dict[str, Dict] = {rule["id"]: rule for rule in driver.get("rules", [])}
         return rules
 
     def _process_code_flows(
@@ -179,8 +175,7 @@ class Parser(BaseParser):
         Sarif also supports logical locations (§3.33) that might describe
         a namespace, type, etc, but CodeChecker has no use for that.
         """
-        physical_loc = location.get("physicalLocation")
-        if physical_loc:
+        if physical_loc := location.get("physicalLocation"):
             file = self._get_file(physical_loc)
             rng = self._get_range(physical_loc)
             return file, rng
@@ -352,24 +347,27 @@ class Parser(BaseParser):
         locations = []
 
         if report.bug_path_events:
-            for event in report.bug_path_events:
-                locations.append(self._create_location_from_bug_path_event(
-                    event, "important"))
-
+            locations.extend(
+                self._create_location_from_bug_path_event(event, "important")
+                for event in report.bug_path_events
+            )
         if report.notes:
-            for note in report.notes:
-                locations.append(self._create_location_from_bug_path_event(
-                    note, "essential"))
-
+            locations.extend(
+                self._create_location_from_bug_path_event(note, "essential")
+                for note in report.notes
+            )
         if report.macro_expansions:
-            for macro_expansion in report.macro_expansions:
-                locations.append(self._create_location_from_bug_path_event(
-                    macro_expansion, "essential"))
-
+            locations.extend(
+                self._create_location_from_bug_path_event(
+                    macro_expansion, "essential"
+                )
+                for macro_expansion in report.macro_expansions
+            )
         if report.bug_path_positions:
-            for bug_path_position in report.bug_path_positions:
-                locations.append(self._create_location(bug_path_position))
-
+            locations.extend(
+                self._create_location(bug_path_position)
+                for bug_path_position in report.bug_path_positions
+            )
         if locations:
             result["codeFlows"] = [{
                 "threadFlows": [{"locations": locations}]

@@ -38,7 +38,7 @@ class TestStoreConfig(unittest.TestCase):
         self.codechecker_cfg = env.import_codechecker_cfg(self.test_workspace)
 
         test_class = self.__class__.__name__
-        print('Running ' + test_class + ' tests in ' + self.test_workspace)
+        print(f'Running {test_class} tests in {self.test_workspace}')
 
         # Get the CodeChecker cmd if needed for the tests.
         self._codechecker_cmd = env.codechecker_cmd()
@@ -59,13 +59,18 @@ class TestStoreConfig(unittest.TestCase):
         cc_env["CC_REPORT_DIR"] = self.codechecker_cfg['reportdir']
 
         with open(self.config_file_json, 'w+',
-                  encoding="utf-8", errors="ignore") as config_f:
-            json.dump({
-                'store': [
-                    '--name=' + 'store_config',
-                    '--trim-path-prefix=$HOME',
-                    '--url=' + env.parts_to_url(self.codechecker_cfg),
-                    '$CC_REPORT_DIR']}, config_f)
+                      encoding="utf-8", errors="ignore") as config_f:
+            json.dump(
+                {
+                    'store': [
+                        '--name=' + 'store_config',
+                        '--trim-path-prefix=$HOME',
+                        f'--url={env.parts_to_url(self.codechecker_cfg)}',
+                        '$CC_REPORT_DIR',
+                    ]
+                },
+                config_f,
+            )
 
         store_cmd = [env.codechecker_cmd(), 'store', '--config',
                      self.config_file_json]

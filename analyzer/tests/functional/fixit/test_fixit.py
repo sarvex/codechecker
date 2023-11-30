@@ -47,7 +47,7 @@ class TestFixit(unittest.TestCase):
         # and print out the path.
         global TEST_WORKSPACE
 
-        print("Removing: " + TEST_WORKSPACE)
+        print(f"Removing: {TEST_WORKSPACE}")
         shutil.rmtree(TEST_WORKSPACE)
 
     def setup_method(self, method):
@@ -56,7 +56,7 @@ class TestFixit(unittest.TestCase):
         self.test_workspace = os.environ['TEST_WORKSPACE']
 
         test_class = self.__class__.__name__
-        print('Running ' + test_class + ' tests in ' + self.test_workspace)
+        print(f'Running {test_class} tests in {self.test_workspace}')
 
         # Get the CodeChecker cmd if needed for the tests.
         self._codechecker_cmd = env.codechecker_cmd()
@@ -82,10 +82,13 @@ class TestFixit(unittest.TestCase):
         source_file_cpp = os.path.join(self.test_workspace, "main.cpp")
 
         # Create a compilation database.
-        build_log = [{"directory": self.test_workspace,
-                      "command": "g++ -c -std=c++98 " + source_file_cpp,
-                      "file": source_file_cpp
-                      }]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"g++ -c -std=c++98 {source_file_cpp}",
+                "file": source_file_cpp,
+            }
+        ]
 
         with open(build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:
@@ -174,10 +177,13 @@ int main()
         source_file_cpp = os.path.join(self.test_workspace, "main.cpp")
 
         # Create a compilation database.
-        build_log = [{"directory": self.test_workspace,
-                      "command": "g++ -c -std=c++98 " + source_file_cpp,
-                      "file": source_file_cpp
-                      }]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"g++ -c -std=c++98 {source_file_cpp}",
+                "file": source_file_cpp,
+            }
+        ]
 
         with open(build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:
@@ -264,14 +270,18 @@ int main()
         report_dir1 = os.path.join(self.test_workspace, "reports1")
         report_dir2 = os.path.join(self.test_workspace, "reports2")
         source1 = '#include <stdio.h>\n' + \
-                  'int main() { printf("%d", "hello"); }'
+                      'int main() { printf("%d", "hello"); }'
         source2 = '#include <stdio.h>\n' + \
-                  'int main() { printf("%d", "hello");\n' + \
-                  'printf("%d", "world"); }'
+                      'int main() { printf("%d", "hello");\n' + \
+                      'printf("%d", "world"); }'
 
-        build_log = [{"directory": self.test_workspace,
-                      "command": "gcc -c " + source_file,
-                      "file": source_file}]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"gcc -c {source_file}",
+                "file": source_file,
+            }
+        ]
 
         with open(build_json, 'w', encoding="utf-8", errors="ignore") as f:
             json.dump(build_log, f)
@@ -370,14 +380,20 @@ int main()
         source_file2 = os.path.join(self.test_workspace, "main2.c")
         report_dir = os.path.join(self.test_workspace, "reports")
         source = '#include <stdio.h>\n' + \
-                 'int main() { printf("%d", "hello");\n'
+                     'int main() { printf("%d", "hello");\n'
 
-        build_log = [{"directory": self.test_workspace,
-                      "command": "gcc -c " + source_file1,
-                      "file": source_file1},
-                     {"directory": self.test_workspace,
-                      "command": "gcc -c " + source_file2,
-                      "file": source_file2}]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"gcc -c {source_file1}",
+                "file": source_file1,
+            },
+            {
+                "directory": self.test_workspace,
+                "command": f"gcc -c {source_file2}",
+                "file": source_file2,
+            },
+        ]
 
         with open(build_json, 'w', encoding="utf-8", errors="ignore") as f:
             json.dump(build_log, f)

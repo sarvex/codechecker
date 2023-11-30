@@ -38,7 +38,6 @@ class TestBlameInfo(unittest.TestCase):
         os.environ['TEST_WORKSPACE'] = TEST_WORKSPACE
 
         test_project = 'cpp'
-        test_config = {}
         project_info = project.get_info(test_project)
 
         test_project_path = os.path.join(TEST_WORKSPACE, "test_proj")
@@ -46,8 +45,7 @@ class TestBlameInfo(unittest.TestCase):
 
         project_info['project_path'] = test_project_path
         test_project_name = project_info['name'] + '_' + uuid.uuid4().hex
-        test_config['test_project'] = project_info
-
+        test_config = {'test_project': project_info}
         suppress_file = None
         skip_list_file = None
         test_env = env.test_env(TEST_WORKSPACE)
@@ -71,14 +69,12 @@ class TestBlameInfo(unittest.TestCase):
         # Extend the checker configuration with the server access.
         codechecker_cfg.update(server_access)
 
-        # Clean the test project, if needed by the tests.
-        ret = project.clean(test_project)
-        if ret:
+        if ret := project.clean(test_project):
             sys.exit(ret)
 
-        ret = codechecker.check_and_store(
-          codechecker_cfg, test_project_name, project.path(test_project))
-        if ret:
+        if ret := codechecker.check_and_store(
+            codechecker_cfg, test_project_name, project.path(test_project)
+        ):
             sys.exit(1)
         print("Analyzing test project was succcessful.")
 
@@ -101,7 +97,7 @@ class TestBlameInfo(unittest.TestCase):
             'codechecker_cfg']['check_env']
         codechecker.remove_test_package_product(TEST_WORKSPACE, check_env)
 
-        print("Removing: " + TEST_WORKSPACE)
+        print(f"Removing: {TEST_WORKSPACE}")
         shutil.rmtree(TEST_WORKSPACE, ignore_errors=True)
 
     def setup_method(self, method):
@@ -109,7 +105,7 @@ class TestBlameInfo(unittest.TestCase):
         self.test_workspace = os.environ['TEST_WORKSPACE']
 
         test_class = self.__class__.__name__
-        print('Running ' + test_class + ' tests in ' + self.test_workspace)
+        print(f'Running {test_class} tests in {self.test_workspace}')
 
         self._codechecker_cfg = env.import_codechecker_cfg(self.test_workspace)
 

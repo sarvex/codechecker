@@ -24,7 +24,7 @@ def _generate_suppress_file(suppress_file):
     Create a dummy suppress file just to check if the old and the new
     suppress format can be processed.
     """
-    print("Generating suppress file: " + suppress_file)
+    print(f"Generating suppress file: {suppress_file}")
 
     import calendar
     import hashlib
@@ -41,17 +41,13 @@ def _generate_suppress_file(suppress_file):
             hashlib.md5(suppress_line.encode("utf-8")).hexdigest() +
             '#' + hash_version)
 
-    s_file = open(suppress_file, 'w', encoding='utf-8', errors='ignore')
-    for k in suppress_stuff:
-        s_file.write(k + '||' + 'idziei éléáálk ~!@#$#%^&*() \n')
-        s_file.write(
-            k + '||' + 'test_~!@#$%^&*.cpp' +
-            '||' + 'idziei éléáálk ~!@#$%^&*(\n')
-        s_file.write(
-            hashlib.md5(suppress_line.encode("utf-8")).hexdigest() + '||' +
-            'test_~!@#$%^&*.cpp' + '||' + 'idziei éléáálk ~!@#$%^&*(\n')
-
-    s_file.close()
+    with open(suppress_file, 'w', encoding='utf-8', errors='ignore') as s_file:
+        for k in suppress_stuff:
+            s_file.write(f'{k}||' + 'idziei éléáálk ~!@#$#%^&*() \n')
+            s_file.write((f'{k}||test_~!@#$%^&*.cpp||' + 'idziei éléáálk ~!@#$%^&*(\n'))
+            s_file.write(
+                hashlib.md5(suppress_line.encode("utf-8")).hexdigest() + '||' +
+                'test_~!@#$%^&*.cpp' + '||' + 'idziei éléáálk ~!@#$%^&*(\n')
 
 
 class TestSuppress(unittest.TestCase):
@@ -68,8 +64,6 @@ class TestSuppress(unittest.TestCase):
 
         test_project = 'suppress'
 
-        test_config = {}
-
         project_info = project.get_info(test_project)
 
         test_proj_path = os.path.join(TEST_WORKSPACE, "test_proj")
@@ -77,8 +71,7 @@ class TestSuppress(unittest.TestCase):
 
         project_info['project_path'] = test_proj_path
 
-        test_config['test_project'] = project_info
-
+        test_config = {'test_project': project_info}
         # Generate a suppress file for the tests.
         suppress_file = os.path.join(TEST_WORKSPACE, 'suppress_file')
         if os.path.isfile(suppress_file):
@@ -95,20 +88,18 @@ class TestSuppress(unittest.TestCase):
             'checkers': []
         }
 
-        ret = project.clean(test_project, test_env)
-        if ret:
+        if ret := project.clean(test_project, test_env):
             sys.exit(ret)
 
         output_dir = codechecker_cfg['reportdir'] \
-            if 'reportdir' in codechecker_cfg \
-            else os.path.join(codechecker_cfg['workspace'], 'reports')
+                if 'reportdir' in codechecker_cfg \
+                else os.path.join(codechecker_cfg['workspace'], 'reports')
 
         codechecker_cfg['reportdir'] = output_dir
 
-        ret = codechecker.log_and_analyze(codechecker_cfg,
-                                          project.path(test_project))
-
-        if ret:
+        if ret := codechecker.log_and_analyze(
+            codechecker_cfg, project.path(test_project)
+        ):
             sys.exit(1)
         print("Analyzing the test project was successful.")
 
@@ -123,7 +114,7 @@ class TestSuppress(unittest.TestCase):
         # and print out the path.
         global TEST_WORKSPACE
 
-        print("Removing: " + TEST_WORKSPACE)
+        print(f"Removing: {TEST_WORKSPACE}")
         shutil.rmtree(TEST_WORKSPACE)
 
     def setup_method(self, method):

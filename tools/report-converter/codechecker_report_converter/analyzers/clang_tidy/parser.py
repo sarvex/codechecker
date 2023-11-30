@@ -146,19 +146,18 @@ class Parser(BaseParser):
         """ Parses fixit messages. """
 
         while self.message_line_re.match(line) is None and \
-                self.note_line_re.match(line) is None:
-            match = self.fixit_new_re.match(line)
-            if not match:
-                match = self.fixit_old_re.match(line)
-                message_text = match.group("message")
-                # Until Clang 16, the FixIt line starts with whitespace.
-                col = line.find(message_text) + 1
-            else:
+                    self.note_line_re.match(line) is None:
+            if match := self.fixit_new_re.match(line):
                 message_text = match.group("message")
                 # In newer versions, we have whitespace then, optionally
                 # a line number, and then a | character.
                 col = line.find(message_text) - line.find("|") - 1
 
+            else:
+                match = self.fixit_old_re.match(line)
+                message_text = match.group("message")
+                # Until Clang 16, the FixIt line starts with whitespace.
+                col = line.find(message_text) + 1
             report.notes.append(BugPathEvent(
                     f"{message_text} (fixit)",
                     report.file,

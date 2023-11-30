@@ -20,6 +20,5 @@ def prepend_all(flag, params):
     """
     result = []
     for param in params:
-        result.append(flag)
-        result.append(param)
+        result.extend((flag, param))
     return result

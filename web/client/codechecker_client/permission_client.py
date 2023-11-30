@@ -46,12 +46,7 @@ def handle_permissions(args):
     """
     Argument handler for the 'CodeChecker cmd permissions' subcommand
     """
-    # If the given output format is not 'table', redirect logger's output to
-    # the stderr.
-    stream = None
-    if 'output_format' in args:
-        stream = 'stderr'
-
+    stream = 'stderr' if 'output_format' in args else None
     init_logger(args.verbose if 'verbose' in args else None, stream)
 
     protocol, host, port = split_server_url(args.server_url)

@@ -86,21 +86,24 @@ def prepare(analyzer_command_file, pathOptions):
         return res
 
     # Find Clang include path
-    clang_include_path = lib.get_resource_dir(pathOptions.clang) + '/include'
+    clang_include_path = f'{lib.get_resource_dir(pathOptions.clang)}/include'
 
     if clang_include_path is None:
-        clang_lib_path = os.path.dirname(pathOptions.clang) + '/../lib'
-        clang_include_path = ''
-        for path, _, files in os.walk(clang_lib_path):
-            if 'stddef.h' in files:
-                clang_include_path = path
-                break
-
+        clang_lib_path = f'{os.path.dirname(pathOptions.clang)}/../lib'
+        clang_include_path = next(
+            (
+                path
+                for path, _, files in os.walk(clang_lib_path)
+                if 'stddef.h' in files
+            ),
+            '',
+        )
     if clang_include_path is None:
         return res
 
-    return res.replace('-nobuiltininc',
-                       '-nobuiltininc -isystem ' + clang_include_path)
+    return res.replace(
+        '-nobuiltininc', f'-nobuiltininc -isystem {clang_include_path}'
+    )
 
 
 if __name__ == '__main__':

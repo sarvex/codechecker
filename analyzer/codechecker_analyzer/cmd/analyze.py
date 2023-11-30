@@ -10,6 +10,7 @@ Execute analysis over an already existing build.json compilation database.
 """
 
 
+
 import argparse
 import collections
 import json
@@ -41,7 +42,7 @@ LOG = logger.get_logger('system')
 header_file_extensions = (
     '.h', '.hh', '.H', '.hp', '.hxx', '.hpp', '.HPP', '.h++', '.tcc')
 
-epilog_env_var = f"""
+epilog_env_var = """
   CC_ANALYZERS_FROM_PATH   Set to `yes` or `1` to enforce taking the analyzers
                            from the `PATH` instead of the given binaries.
   CC_ANALYZER_BIN          Set the absolute paths of an analyzer binaries.
@@ -474,9 +475,7 @@ def add_arguments_to_parser(parser):
                                     "the analysis is considered as a failed "
                                     "one.")
 
-    clang_has_z3 = analyzer_types.is_z3_capable()
-
-    if clang_has_z3:
+    if clang_has_z3 := analyzer_types.is_z3_capable():
         analyzer_opts.add_argument('--z3',
                                    dest='enable_z3',
                                    choices=['on', 'off'],
@@ -490,9 +489,7 @@ def add_arguments_to_parser(parser):
                                         "backend is a highly experimental "
                                         "and likely unstable feature.")
 
-    clang_has_z3_refutation = analyzer_types.is_z3_refutation_capable()
-
-    if clang_has_z3_refutation:
+    if clang_has_z3_refutation := analyzer_types.is_z3_refutation_capable():
         analyzer_opts.add_argument('--z3-refutation',
                                    dest='enable_z3_refutation',
                                    choices=['on', 'off'],
@@ -836,8 +833,7 @@ def __get_skip_handlers(args, compile_commands) -> SkipListHandlers:
         # Creates a skip file where all source files will be skipped except
         # the given source files and all the header files.
         skip_files = ['+{0}'.format(f) for f in source_file_paths]
-        skip_files.extend(['+/*.h', '+/*.H', '+/*.tcc'])
-        skip_files.append('-*')
+        skip_files.extend(['+/*.h', '+/*.H', '+/*.tcc', '-*'])
         content = "\n".join(skip_files)
         skip_handlers.append(SkipListHandler(content))
         LOG.debug("Skip handler is created for the '--file' option with the "
@@ -952,8 +948,7 @@ def main(args):
     args.output_path = os.path.abspath(args.output_path)
     if os.path.exists(args.output_path) and \
             not os.path.isdir(args.output_path):
-        LOG.error("The given output path is not a directory: " +
-                  args.output_path)
+        LOG.error(f"The given output path is not a directory: {args.output_path}")
         sys.exit(1)
 
     if 'enable_all' in args:
@@ -984,10 +979,10 @@ def main(args):
     # Process the skip list if present.
     skip_handlers = __get_skip_handlers(args, compile_commands)
 
-    ctu_or_stats_enabled = False
     # Skip list is applied only in pre-analysis
     # if --ctu-collect was called explicitly.
     pre_analysis_skip_handlers = None
+    ctu_or_stats_enabled = False
     if 'ctu_phases' in args:
         ctu_collect = args.ctu_phases[0]
         ctu_analyze = args.ctu_phases[1]
@@ -1148,8 +1143,6 @@ def main(args):
         LOG.debug("Sending analyzer statistics finished.")
     except Exception:
         LOG.debug("Failed to send analyzer statistics!")
-        pass
-
     # Generally exit status is set by sys.exit() call in CodeChecker. However,
     # exit code 3 has a special meaning: it returns when the underlying
     # analyzer tool fails.

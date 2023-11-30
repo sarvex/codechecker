@@ -119,7 +119,7 @@ class AnalyzerConfigHandler(metaclass=ABCMeta):
         """
         Generate all applicable name variations from the given checker list.
         """
-        checker_names = (name for name in self.__available_checkers)
+        checker_names = iter(self.__available_checkers)
         reserved_names = []
 
         for name in checker_names:
@@ -167,17 +167,16 @@ class AnalyzerConfigHandler(metaclass=ABCMeta):
         for checker_name, description in checkers:
             self.add_checker(checker_name, description)
 
-        # Set default enabled or disabled checkers, based on the config file.
-        default_profile_checkers = \
-            checker_labels.checkers_by_labels(['profile:default'])
-        if not default_profile_checkers:
-            # Check whether a default profile exists.
-            LOG.warning("No default profile found!")
-        else:
+        if default_profile_checkers := checker_labels.checkers_by_labels(
+            ['profile:default']
+        ):
             # Turn default checkers on.
             for checker in default_profile_checkers:
                 self.set_checker_enabled(checker)
 
+        else:
+            # Check whether a default profile exists.
+            LOG.warning("No default profile found!")
         self.enable_all = enable_all
         # If enable_all is given, almost all checkers should be enabled.
         disabled_groups = ["alpha.", "debug.", "osx.", "abseil-", "android-",
@@ -194,7 +193,7 @@ class AnalyzerConfigHandler(metaclass=ABCMeta):
                     self.set_checker_enabled(checker_name)
 
                 if checker_name.startswith("osx.") and \
-                        platform.system() == 'Darwin':
+                            platform.system() == 'Darwin':
                     # OSX checkers are only enable-all'd if we are on OSX.
                     self.set_checker_enabled(checker_name)
 

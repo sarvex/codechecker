@@ -88,16 +88,16 @@ def __convert_reports(reports: List[Report],
         rel_file_path = os.path.relpath(file_name, repo_dir) \
             if repo_dir and os.path.dirname(file_name) != "" else file_name
 
-        checked_file = rel_file_path \
-            + ':' + str(report.line) + ":" + str(report.column)
+        checked_file = f'{rel_file_path}:{str(report.line)}:{str(report.column)}'
 
         review_comment_msg = \
             f"[{report.severity}] {checked_file}: {report.message} " \
             f"[{report.checker_name}]\n{report.source_line}"
 
         # Skip the report if it is not in the changed files.
-        if changed_file_path and not \
-                any([file_name.endswith(c) for c in changed_files]):
+        if changed_file_path and not any(
+            file_name.endswith(c) for c in changed_files
+        ):
             report_messages_in_unchanged_files.append(review_comment_msg)
             continue
 
@@ -123,13 +123,15 @@ def __convert_reports(reports: List[Report],
     if report_url:
         message += f" See: {report_url}"
 
-    review = {"tag": "jenkins",
-              "message": message,
-              "labels": {
-                  "Code-Review": -1 if report_count else 1,
-                  "Verified": -1 if report_count else 1},
-              "comments": review_comments}
-    return review
+    return {
+        "tag": "jenkins",
+        "message": message,
+        "labels": {
+            "Code-Review": -1 if report_count else 1,
+            "Verified": -1 if report_count else 1,
+        },
+        "comments": review_comments,
+    }
 
 
 def __get_changed_files(changed_file_path: Union[None, str]) -> List[str]:
@@ -147,20 +149,17 @@ def __get_changed_files(changed_file_path: Union[None, str]) -> List[str]:
         return changed_files
 
     with open(changed_file_path,
-              encoding='utf-8',
-              errors='ignore') as changed_file:
+                  encoding='utf-8',
+                  errors='ignore') as changed_file:
         content = changed_file.read()
 
-        # The file can contain some garbage values at start, so we use
-        # regex search to find a json object.
-        match = re.search(r'\{[\s\S]*\}', content)
-        if not match:
+        if match := re.search(r'\{[\s\S]*\}', content):
+            changed_files.extend(
+                filename
+                for filename in json.loads(match.group(0))
+                if "/COMMIT_MSG" not in filename
+            )
+        else:
             return changed_files
-
-        for filename in json.loads(match.group(0)):
-            if "/COMMIT_MSG" in filename:
-                continue
-
-            changed_files.append(filename)
 
     return changed_files

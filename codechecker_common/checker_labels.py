@@ -98,7 +98,7 @@ class CheckerLabels:
         """
         def is_string_list(x):
             return isinstance(x, list) and \
-                all(map(lambda s: isinstance(s, str), x))
+                    all(map(lambda s: isinstance(s, str), x))
 
         def is_unique(labels: Iterable[str], label: str):
             """
@@ -114,7 +114,7 @@ class CheckerLabels:
             return True
 
         if not isinstance(data, dict):
-            raise ValueError(f'Top level element should be a JSON object.')
+            raise ValueError('Top level element should be a JSON object.')
 
         for _, checkers in data.items():
             for checker, labels in checkers.items():
@@ -129,9 +129,7 @@ class CheckerLabels:
 
                 for unique_label in CheckerLabels.UNIQUE_LABELS:
                     if not is_unique(labels, unique_label):
-                        raise ValueError(
-                            f'Label "severity" should be unique for checker '
-                            '{checker}.')
+                        raise ValueError('Label "severity" should be unique for checker {checker}.')
 
     def __get_analyzer_data(
         self,

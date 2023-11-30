@@ -15,11 +15,10 @@ AVAILABLE_GNU_COMPILERS = [
 
 
 def append_host_LD_LIBRARY_PATH(env: Mapping[str, str]) -> Mapping[str, str]:
-    LD_LIBRARY_PATH = os.getenv("LD_LIBRARY_PATH")
-    if LD_LIBRARY_PATH:
+    if LD_LIBRARY_PATH := os.getenv("LD_LIBRARY_PATH"):
         if "LD_LIBRARY_PATH" not in env:
             env["LD_LIBRARY_PATH"] = ""
-        env["LD_LIBRARY_PATH"] += ':' + LD_LIBRARY_PATH
+        env["LD_LIBRARY_PATH"] += f':{LD_LIBRARY_PATH}'
     return env
 
 
@@ -30,9 +29,7 @@ class EscapingTests(BasicLoggerTest):
         It will use the compilers available in the PATH matching that pattern.
         """
         if not AVAILABLE_GNU_COMPILERS:
-            self.skipTest(
-                f"No compiler matches the 'g++-*' pattern in your PATH"
-            )
+            self.skipTest("No compiler matches the 'g++-*' pattern in your PATH")
 
         for cc in AVAILABLE_GNU_COMPILERS:
             self.tearDown()  # Cleanup the previous iteration.
@@ -58,9 +55,7 @@ class EscapingTests(BasicLoggerTest):
         prefix, which (probably) shouldn't match to any compiler.
         """
         if not AVAILABLE_GNU_COMPILERS:
-            self.skipTest(
-                f"No compiler matches the 'g++-*' pattern in your PATH"
-            )
+            self.skipTest("No compiler matches the 'g++-*' pattern in your PATH")
 
         for cc in AVAILABLE_GNU_COMPILERS:
             self.tearDown()  # Cleanup the previous iteration.
@@ -257,9 +252,7 @@ class EscapingTests(BasicLoggerTest):
         binary = self.binary_file
         clang = shutil.which("clang")
         if not clang:
-            self.skipTest(
-                f"No compiler matches the 'clang' pattern in your PATH"
-            )
+            self.skipTest("No compiler matches the 'clang' pattern in your PATH")
 
         fd, rsp_file = tempfile.mkstemp(
             suffix=".rsp", prefix="logger-test-reponse-", text=True
@@ -293,9 +286,7 @@ class EscapingTests(BasicLoggerTest):
         binary = self.binary_file
         clang = shutil.which("clang")
         if not clang:
-            self.skipTest(
-                f"No compiler matches the 'clang' pattern in your PATH"
-            )
+            self.skipTest("No compiler matches the 'clang' pattern in your PATH")
 
         fd, rsp_file = tempfile.mkstemp(
             suffix=".rsp", prefix="logger-test-reponse-", text=True

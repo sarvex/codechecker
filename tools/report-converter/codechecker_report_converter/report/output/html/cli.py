@@ -78,7 +78,7 @@ def main():
         os.path.join(args.output_dir, 'index.html')))
 
     if changed_source_files:
-        changed_files = '\n'.join([' - ' + f for f in changed_source_files])
+        changed_files = '\n'.join([f' - {f}' for f in changed_source_files])
         print("\nThe following source file contents changed since the "
               "latest analysis:\n{0}\nPlease analyze your project again to "
               "update the reports!".format(changed_files))

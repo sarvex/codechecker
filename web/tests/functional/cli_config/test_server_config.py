@@ -39,7 +39,7 @@ class TestServerConfig(unittest.TestCase):
         self.codechecker_cfg = env.import_codechecker_cfg(self.test_workspace)
 
         test_class = self.__class__.__name__
-        print('Running ' + test_class + ' tests in ' + self.test_workspace)
+        print(f'Running {test_class} tests in {self.test_workspace}')
 
         # Get the CodeChecker cmd if needed for the tests.
         self._codechecker_cmd = env.codechecker_cmd()

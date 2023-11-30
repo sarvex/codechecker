@@ -52,17 +52,15 @@ class TestCtuFailure(unittest.TestCase):
         # and print out the path.
         global TEST_WORKSPACE
 
-        print('Removing: ' + TEST_WORKSPACE)
+        print(f'Removing: {TEST_WORKSPACE}')
         shutil.rmtree(TEST_WORKSPACE)
 
     def setup_method(self, method):
         """ Set up workspace."""
 
-        # TEST_WORKSPACE is automatically set by test package __init__.py .
-        self.test_workspace = os.environ['TEST_WORKSPACE']
-
         test_class = self.__class__.__name__
-        print('Running ' + test_class + ' tests in ' + self.test_workspace)
+        self.test_workspace = os.environ['TEST_WORKSPACE']
+        print(f'Running {test_class} tests in {self.test_workspace}')
 
         # Get the CodeChecker cmd if needed for the tests.
         self._codechecker_cmd = env.codechecker_cmd()
@@ -76,19 +74,20 @@ class TestCtuFailure(unittest.TestCase):
                                          env=self.env)
         self.assertEqual(result, 0, "Analyzing failed.")
         setattr(self, CTU_ATTR, is_ctu_capable(output))
-        print("'analyze' reported CTU compatibility? " +
-              str(getattr(self, CTU_ATTR)))
+        print(f"'analyze' reported CTU compatibility? {str(getattr(self, CTU_ATTR))}")
 
         setattr(self, ON_DEMAND_ATTR, is_ctu_on_demand_capable(output))
-        print("'analyze' reported CTU-on-demand-compatibility? " +
-              str(getattr(self, ON_DEMAND_ATTR)))
+        print(
+            f"'analyze' reported CTU-on-demand-compatibility? {str(getattr(self, ON_DEMAND_ATTR))}"
+        )
 
         setattr(self, DISPLAY_PROGRESS_ATTR,
                 is_ctu_display_progress_capable(
                     self.__getClangSaPath()))
 
-        print("Has display-ctu-progress=true? " +
-              str(getattr(self, DISPLAY_PROGRESS_ATTR)))
+        print(
+            f"Has display-ctu-progress=true? {str(getattr(self, DISPLAY_PROGRESS_ATTR))}"
+        )
 
         self.__old_pwd = os.getcwd()
 

@@ -43,7 +43,7 @@ class TestAnalyze(unittest.TestCase):
     def teardown_class(self):
         """Delete the workspace associated with this test"""
 
-        print("Removing: " + TEST_WORKSPACE)
+        print(f"Removing: {TEST_WORKSPACE}")
         shutil.rmtree(TEST_WORKSPACE)
 
     def setup_method(self, method):
@@ -52,7 +52,7 @@ class TestAnalyze(unittest.TestCase):
         self.test_workspace = os.environ['TEST_WORKSPACE']
 
         test_class = self.__class__.__name__
-        print('Running ' + test_class + ' tests in ' + self.test_workspace)
+        print(f'Running {test_class} tests in {self.test_workspace}')
 
         # Get the CodeChecker cmd if needed for the tests.
         self._codechecker_cmd = env.codechecker_cmd()
@@ -145,15 +145,18 @@ class TestAnalyze(unittest.TestCase):
         source_file_c = os.path.join(self.test_workspace, "simple.c")
 
         # Create a compilation database.
-        build_log = [{"directory": self.test_workspace,
-                      "command": "gcc -c " + source_file_c,
-                      "file": source_file_c
-                      },
-                     {"directory": self.test_workspace,
-                      "command": "clang++ -c " + source_file_cpp,
-                      "file": source_file_cpp
-                      }
-                     ]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"gcc -c {source_file_c}",
+                "file": source_file_c,
+            },
+            {
+                "directory": self.test_workspace,
+                "command": f"clang++ -c {source_file_cpp}",
+                "file": source_file_cpp,
+            },
+        ]
 
         with open(build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:
@@ -202,8 +205,7 @@ class TestAnalyze(unittest.TestCase):
                 # For clang we do not collect anything.
                 self.assertTrue("g++" in data)
             except ValueError:
-                self.fail("json.load should successfully parse the file %s"
-                          % info_File)
+                self.fail(f"json.load should successfully parse the file {info_File}")
 
     def test_compiler_info_file_is_loaded(self):
         '''
@@ -216,9 +218,13 @@ class TestAnalyze(unittest.TestCase):
                                           "compiler_info.json")
 
         # Create a compilation database.
-        build_log = [{"directory": self.test_workspace,
-                      "command": "clang++ -c " + source_file,
-                      "file": source_file}]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"clang++ -c {source_file}",
+                "file": source_file,
+            }
+        ]
 
         with open(build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:
@@ -273,10 +279,13 @@ class TestAnalyze(unittest.TestCase):
                        "--capture-analysis-output"]
 
         source_file = os.path.join(self.test_dir, "success.c")
-        build_log = [{"directory": self.test_workspace,
-                      "command": "gcc -c " + source_file,
-                      "file": source_file
-                      }]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"gcc -c {source_file}",
+                "file": source_file,
+            }
+        ]
 
         with open(build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:
@@ -312,10 +321,13 @@ class TestAnalyze(unittest.TestCase):
         source_file = os.path.join(self.test_dir, "failure.c")
 
         # Create a compilation database.
-        build_log = [{"directory": self.test_workspace,
-                      "command": "gcc -c " + source_file,
-                      "file": source_file
-                      }]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"gcc -c {source_file}",
+                "file": source_file,
+            }
+        ]
 
         with open(build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:
@@ -356,8 +368,10 @@ class TestAnalyze(unittest.TestCase):
             self.assertIn("analyzer-command", files)
 
             with archive.open("build-action", 'r') as archived_buildcmd:
-                self.assertEqual(archived_buildcmd.read().decode("utf-8"),
-                                 "gcc -c " + source_file)
+                self.assertEqual(
+                    archived_buildcmd.read().decode("utf-8"),
+                    f"gcc -c {source_file}",
+                )
 
             source_in_archive = os.path.join("sources-root",
                                              source_file.lstrip('/'))
@@ -380,10 +394,13 @@ class TestAnalyze(unittest.TestCase):
         source_file = os.path.join(self.test_dir, "failure.c")
 
         # Create a compilation database.
-        build_log = [{"directory": self.test_workspace,
-                      "command": "gcc -c " + source_file,
-                      "file": source_file
-                      }]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"gcc -c {source_file}",
+                "file": source_file,
+            }
+        ]
 
         with open(build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:
@@ -425,8 +442,10 @@ class TestAnalyze(unittest.TestCase):
             self.assertIn("analyzer-command", files)
 
             with archive.open("build-action", 'r') as archived_buildcmd:
-                self.assertEqual(archived_buildcmd.read().decode("utf-8"),
-                                 "gcc -c " + source_file)
+                self.assertEqual(
+                    archived_buildcmd.read().decode("utf-8"),
+                    f"gcc -c {source_file}",
+                )
 
             source_in_archive = os.path.join("sources-root",
                                              source_file.lstrip('/'))
@@ -452,10 +471,13 @@ class TestAnalyze(unittest.TestCase):
                        "-o", self.report_dir]
 
         source_file = os.path.join(self.test_dir, "failure.c")
-        build_log = [{"directory": self.test_workspace,
-                      "command": "cc -c -std=c++11 " + source_file,
-                      "file": source_file
-                      }]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"cc -c -std=c++11 {source_file}",
+                "file": source_file,
+            }
+        ]
 
         # cc -std=c++11 writes error "-std=c++11 valid for C++ but not for C"
         # to its output when invoked as a dependency generator for this
@@ -496,10 +518,13 @@ class TestAnalyze(unittest.TestCase):
         source_file = os.path.join(self.test_workspace, "simple.cpp")
 
         # Create a compilation database.
-        build_log = [{"directory": self.test_workspace,
-                      "command": "g++ -c " + source_file,
-                      "file": source_file
-                      }]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"g++ -c {source_file}",
+                "file": source_file,
+            }
+        ]
 
         with open(build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:
@@ -531,10 +556,13 @@ class TestAnalyze(unittest.TestCase):
         failed_dir = os.path.join(report_dir, "failed")
 
         # Create a compilation database.
-        build_log = [{"directory": self.test_dir,
-                      "command": "cc -c " + source_file + " -Iincludes",
-                      "file": source_file
-                      }]
+        build_log = [
+            {
+                "directory": self.test_dir,
+                "command": f"cc -c {source_file} -Iincludes",
+                "file": source_file,
+            }
+        ]
 
         with open(build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:
@@ -567,10 +595,13 @@ class TestAnalyze(unittest.TestCase):
         tidyargs_file = os.path.join(self.test_dir, "tidyargs")
         saargs_file = os.path.join(self.test_dir, "saargs")
 
-        build_log = [{"directory": self.test_dir,
-                      "command": "g++ -c " + source_file,
-                      "file": source_file
-                      }]
+        build_log = [
+            {
+                "directory": self.test_dir,
+                "command": f"g++ -c {source_file}",
+                "file": source_file,
+            }
+        ]
 
         with open(build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:
@@ -665,22 +696,28 @@ class TestAnalyze(unittest.TestCase):
         unique_json = os.path.join(report_dir, "unique_compile_commands.json")
 
         # Create a compilation database.
-        build_log = [{"directory": self.test_dir,
-                      "command": "cc -c " + source_file +
-                      " -Iincludes -o simple_b.o",
-                      "file": source_file},
-                     {"directory": self.test_dir,
-                      "command": "cc -c " + source_file +
-                      " -Iincludes -o simple_a.o",
-                      "file": source_file},
-                     {"directory": self.test_dir,
-                      "command": "cc -c " + source_file +
-                      " -Iincludes -o simple_a.o",
-                      "file": source_file},
-                     {"directory": self.test_dir,
-                      "command": "cc -c " + source_file2 +
-                      " -Iincludes -o success.o",
-                      "file": source_file2}]
+        build_log = [
+            {
+                "directory": self.test_dir,
+                "command": f"cc -c {source_file} -Iincludes -o simple_b.o",
+                "file": source_file,
+            },
+            {
+                "directory": self.test_dir,
+                "command": f"cc -c {source_file} -Iincludes -o simple_a.o",
+                "file": source_file,
+            },
+            {
+                "directory": self.test_dir,
+                "command": f"cc -c {source_file} -Iincludes -o simple_a.o",
+                "file": source_file,
+            },
+            {
+                "directory": self.test_dir,
+                "command": f"cc -c {source_file2} -Iincludes -o success.o",
+                "file": source_file2,
+            },
+        ]
 
         with open(build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:
@@ -789,10 +826,13 @@ class TestAnalyze(unittest.TestCase):
         analyze_cmd.extend(extra_args)
 
         source_file = os.path.join(self.test_dir, "success.c")
-        build_log = [{"directory": self.test_workspace,
-                      "command": "gcc -c " + source_file,
-                      "file": source_file
-                      }]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"gcc -c {source_file}",
+                "file": source_file,
+            }
+        ]
 
         with open(build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:
@@ -842,10 +882,13 @@ class TestAnalyze(unittest.TestCase):
                        "-e", "clang-diagnostic-unused"]
 
         source_file = os.path.join(self.test_dir, "compiler_warning.c")
-        build_log = [{"directory": self.test_workspace,
-                      "command": "gcc -c " + source_file,
-                      "file": source_file
-                      }]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"gcc -c {source_file}",
+                "file": source_file,
+            }
+        ]
 
         with open(build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:
@@ -873,10 +916,13 @@ class TestAnalyze(unittest.TestCase):
         analyze_cmd.extend(extra_args)
 
         source_file = os.path.join(self.test_dir, "success.c")
-        build_log = [{"directory": self.test_workspace,
-                      "command": "gcc -c " + source_file,
-                      "file": source_file
-                      }]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"gcc -c {source_file}",
+                "file": source_file,
+            }
+        ]
 
         with open(build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:
@@ -925,10 +971,13 @@ class TestAnalyze(unittest.TestCase):
                        "-d", "unix", "--verbose", "debug_analyzer"]
 
         source_file = os.path.join(self.test_dir, "success.c")
-        build_log = [{"directory": self.test_workspace,
-                      "command": "gcc -c " + source_file,
-                      "file": source_file
-                      }]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"gcc -c {source_file}",
+                "file": source_file,
+            }
+        ]
 
         with open(build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:
@@ -961,10 +1010,13 @@ class TestAnalyze(unittest.TestCase):
                        "-d", "other.missing.checker"]
 
         source_file = os.path.join(self.test_dir, "success.c")
-        build_log = [{"directory": self.test_workspace,
-                      "command": "gcc -c " + source_file,
-                      "file": source_file
-                      }]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"gcc -c {source_file}",
+                "file": source_file,
+            }
+        ]
 
         with open(build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:
@@ -1005,10 +1057,13 @@ class TestAnalyze(unittest.TestCase):
                        "debug_analyzer"]
         source_file = os.path.join(self.test_dir, "simple.c")
 
-        build_log = [{"directory": self.test_workspace,
-                      "command": "gcc -c -std=c99 " + source_file,
-                      "file": source_file
-                      }]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"gcc -c -std=c99 {source_file}",
+                "file": source_file,
+            }
+        ]
 
         with open(build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:
@@ -1025,10 +1080,13 @@ class TestAnalyze(unittest.TestCase):
         # Cppcheck does not support gnu variants of the standards,
         # These are transformed into their respective c and c++
         # varinats inside CodeChecker
-        build_log = [{"directory": self.test_workspace,
-                      "command": "gcc -c -std=gnu99 " + source_file,
-                      "file": source_file
-                      }]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"gcc -c -std=gnu99 {source_file}",
+                "file": source_file,
+            }
+        ]
 
         with open(build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:
@@ -1051,14 +1109,18 @@ class TestAnalyze(unittest.TestCase):
                        '--makefile']
 
         source_file = os.path.join(self.test_dir, "extra_args.cpp")
-        build_log = [{"directory": self.test_workspace,
-                      "command": "g++ -DTIDYARGS -c " + source_file,
-                      "file": source_file
-                      },
-                     {"directory": self.test_workspace,
-                      "command": "g++ -DSAARGS -DTIDYARGS -c " + source_file,
-                      "file": source_file
-                      }]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"g++ -DTIDYARGS -c {source_file}",
+                "file": source_file,
+            },
+            {
+                "directory": self.test_workspace,
+                "command": f"g++ -DSAARGS -DTIDYARGS -c {source_file}",
+                "file": source_file,
+            },
+        ]
 
         with open(build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:
@@ -1140,9 +1202,13 @@ class TestAnalyze(unittest.TestCase):
         """Test analyzer configuration through command line flags."""
         build_json = os.path.join(self.test_workspace, "build_success.json")
         source_file = os.path.join(self.test_dir, "checker_config.cpp")
-        build_log = [{"directory": self.test_workspace,
-                      "command": "gcc -c " + source_file,
-                      "file": source_file}]
+        build_log = [
+            {
+                "directory": self.test_workspace,
+                "command": f"gcc -c {source_file}",
+                "file": source_file,
+            }
+        ]
 
         with open(build_json, 'w',
                   encoding="utf-8", errors="ignore") as outfile:

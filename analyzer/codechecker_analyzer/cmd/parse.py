@@ -49,7 +49,7 @@ def init_logger(level, stream=None, logger_name='system'):
 
 EXPORT_TYPES = ['html', 'json', 'codeclimate', 'gerrit', 'baseline']
 
-epilog_env_var = f"""
+epilog_env_var = """
   CC_CHANGED_FILES       Path of changed files json from Gerrit. Use it when
                          generating gerrit output.
   CC_REPO_DIR            Root directory of the sources, i.e. the directory
@@ -258,10 +258,7 @@ def ch_workdir(metadata: Optional[Dict]):
 def get_metadata(dir_path: str) -> Optional[Dict]:
     """ Get metadata from the given dir path or None if not exists. """
     metadata_file = os.path.join(dir_path, "metadata.json")
-    if os.path.exists(metadata_file):
-        return load_json(metadata_file)
-
-    return None
+    return load_json(metadata_file) if os.path.exists(metadata_file) else None
 
 
 def main(args):

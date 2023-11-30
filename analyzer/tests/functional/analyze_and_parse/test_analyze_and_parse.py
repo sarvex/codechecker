@@ -49,9 +49,9 @@ class AnalyzeParseTestCaseMeta(type):
         # Iterate over the test directory and generate the test cases
         # for each of the output files.
         for ofile in glob.glob(os.path.join(test_dir, '*.output')):
-            test_name = 'test_' + os.path.basename(ofile)
-            test_dict[test_name + '_normal'] = gen_test(ofile, 'NORMAL')
-            test_dict[test_name + '_check'] = gen_test(ofile, 'CHECK')
+            test_name = f'test_{os.path.basename(ofile)}'
+            test_dict[f'{test_name}_normal'] = gen_test(ofile, 'NORMAL')
+            test_dict[f'{test_name}_check'] = gen_test(ofile, 'CHECK')
 
         return type.__new__(mcs, name, bases, test_dict)
 
@@ -117,7 +117,7 @@ class AnalyzeParseTestCase(
         # and print out the path.
         global TEST_WORKSPACE
 
-        print("Removing: " + TEST_WORKSPACE)
+        print(f"Removing: {TEST_WORKSPACE}")
         shutil.rmtree(TEST_WORKSPACE)
 
     def teardown_method(self, method):
@@ -131,14 +131,14 @@ class AnalyzeParseTestCase(
         In case of CodeChecker analyze and check commands the analysis is
         forced to one core.
         """
-        if cmd[1] != 'analyze' and cmd[1] != 'check':
+        if cmd[1] not in ['analyze', 'check']:
             return cmd
 
         new_cmd = []
 
         i = 0
         while i < len(cmd):
-            if cmd[i] == '-j' or cmd[i] == '--jobs':
+            if cmd[i] in ['-j', '--jobs']:
                 i += 2
             elif cmd[i].startswith('-j'):
                 i += 1
@@ -168,14 +168,9 @@ class AnalyzeParseTestCase(
             lines = ofile.readlines()
 
         only_dash = re.compile(r'^[-]+$')
-        dash_index = 0
-        for idx, line in enumerate(lines):
-            if re.match(only_dash, line):
-                # The current line is the first line only containing dashes,
-                # thus mark it as separator.
-                dash_index = idx
-                break
-
+        dash_index = next(
+            (idx for idx, line in enumerate(lines) if re.match(only_dash, line)), 0
+        )
         commands = [line.strip() for line in lines[:dash_index]]
         current_commands = [c for c in commands if c.split('#')[0] == mode]
         if not current_commands:
@@ -248,8 +243,7 @@ class AnalyzeParseTestCase(
                           r'(.+ contains misspelled.+)'.format(sep),
                           r'[] - \2', line)
 
-            if not any([line.startswith(prefix) for prefix
-                        in skip_prefixes]):
+            if not any(line.startswith(prefix) for prefix in skip_prefixes):
                 post_processed_output.append(line)
 
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Actual output below:")
@@ -257,7 +251,7 @@ class AnalyzeParseTestCase(
         print("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Expected output below:")
         print(correct_output)
 
-        print("Test output file: " + path)
+        print(f"Test output file: {path}")
         self.maxDiff = None
         self.assertEqual(''.join(post_processed_output), correct_output)
 

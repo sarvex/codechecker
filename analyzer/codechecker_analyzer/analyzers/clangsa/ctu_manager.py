@@ -65,8 +65,12 @@ def merge_clang_extdef_mappings(ctu_dir, ctu_func_map_file,
 
 def generate_ast_cmd(action, config, triple_arch, source):
     """ Command to generate AST (or PCH) file. """
-    ast_joined_path = os.path.join(config.ctu_dir, triple_arch, 'ast',
-                                   os.path.realpath(source)[1:] + '.ast')
+    ast_joined_path = os.path.join(
+        config.ctu_dir,
+        triple_arch,
+        'ast',
+        f'{os.path.realpath(source)[1:]}.ast',
+    )
     ast_path = os.path.abspath(ast_joined_path)
     ast_dir = os.path.dirname(ast_path)
 
@@ -144,7 +148,7 @@ def ast_dump_path(source_path):
     # Make relative path out of absolute.
     path = path[1:] if path[0] == os.sep else path
     # Prepend path segment, and append filename suffix.
-    return os.path.join("ast", path + ".ast")
+    return os.path.join("ast", f"{path}.ast")
 
 
 def func_map_list_src_to_ast(func_src_list, ctu_on_demand):
@@ -162,18 +166,18 @@ def func_map_list_src_to_ast(func_src_list, ctu_on_demand):
             length_str, _ = fn_src_txt.split(':', 1)
             length = int(length_str)
             sep_pos = len(length_str) + 1 + length
-            mangled_name = fn_src_txt[0: sep_pos]
+            mangled_name = fn_src_txt[:sep_pos]
             path = fn_src_txt[sep_pos + 1:]  # Skipping the ' ' separator
         else:
             dpos = fn_src_txt.find(" ")
-            mangled_name = fn_src_txt[0:dpos]
+            mangled_name = fn_src_txt[:dpos]
             path = fn_src_txt[dpos + 1:]
 
         # On-demand analysis does not require any preprocessing on the source
         # file paths, contrary to AST-dump based.
         mapped_path = path if ctu_on_demand else ast_dump_path(path)
 
-        func_ast_list.append(mangled_name + " " + mapped_path)
+        func_ast_list.append(f"{mangled_name} {mapped_path}")
     return func_ast_list
 
 

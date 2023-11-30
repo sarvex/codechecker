@@ -136,7 +136,7 @@ class MetadataInfoParser:
             dest[analyzer_name]['version'].update([source['version']])
         else:
             dest[analyzer_name] = source
-            dest[analyzer_name]['version'] = set([source['version']])
+            dest[analyzer_name]['version'] = {source['version']}
 
     def __insert_checkers(
         self,

@@ -34,9 +34,7 @@ def run_cmd(cmd):
     Return None if execution fails.
     """
     try:
-        version = subprocess.check_output(
-            cmd, encoding="utf-8", errors="ignore")
-        return version
+        return subprocess.check_output(cmd, encoding="utf-8", errors="ignore")
     except subprocess.CalledProcessError as err:
         eprint(err)
         return None
@@ -48,8 +46,7 @@ def get_version(output):
     """
     version_regex = r"version \b(?P<major>[0-9]+)(?:\.[0-9]+)?(?:\.[0-9]+)?\b"
     version_matcher = re.compile(version_regex)
-    match = version_matcher.search(output)
-    if match:
+    if match := version_matcher.search(output):
         major = match.groups("major")[0]
         minor = match.groups("minor")[0]
         return (int(major), int(minor))
@@ -64,10 +61,13 @@ def check_version(tool_name, got_major_version, expected_major_version):
     Check if the major version is good.
     """
     if got_major_version < expected_major_version["major"]:
-        eprint("Expected "+tool_name+" major version is: " +
-               str(expected_major_version["major"]))
-        eprint("Found "+tool_name+" major version is: " +
-               str(got_major_version))
+        eprint(
+            (
+                f"Expected {tool_name} major version is: "
+                + str(expected_major_version["major"])
+            )
+        )
+        eprint(f"Found {tool_name} major version is: {str(got_major_version)}")
         return False
 
     return True
@@ -91,10 +91,7 @@ def main():
         return 1
 
     valid_version = check_version(tidy, major, _TIDY_MIN_VERSION)
-    if not valid_version:
-        return 1
-
-    return 0
+    return 1 if not valid_version else 0
 
 
 if __name__ == "__main__":

@@ -46,7 +46,7 @@ class TestSkip(unittest.TestCase):
         # and print out the path.
         global TEST_WORKSPACE
 
-        print("Removing: " + TEST_WORKSPACE)
+        print(f"Removing: {TEST_WORKSPACE}")
         shutil.rmtree(TEST_WORKSPACE)
 
     def setup_method(self, method):
@@ -55,7 +55,7 @@ class TestSkip(unittest.TestCase):
         self.test_workspace = os.environ['TEST_WORKSPACE']
 
         test_class = self.__class__.__name__
-        print('Running ' + test_class + ' tests in ' + self.test_workspace)
+        print(f'Running {test_class} tests in {self.test_workspace}')
 
         # Get the CodeChecker cmd if needed for the tests.
         self._codechecker_cmd = env.codechecker_cmd()
@@ -138,12 +138,14 @@ class TestSkip(unittest.TestCase):
 
         # Check if report from the report file is removed.
         report_dir_files = os.listdir(self.report_dir)
-        report_file_to_check = None
-        for f in report_dir_files:
-            if "skip_header.cpp" in f:
-                report_file_to_check = os.path.join(self.report_dir, f)
-                break
-
+        report_file_to_check = next(
+            (
+                os.path.join(self.report_dir, f)
+                for f in report_dir_files
+                if "skip_header.cpp" in f
+            ),
+            None,
+        )
         self.assertIsNotNone(report_file_to_check,
                              "Report file should be generated.")
         report_data = {}
@@ -151,12 +153,9 @@ class TestSkip(unittest.TestCase):
             report_data = plistlib.load(plist_file)
         files = report_data['files']
 
-        skiped_file_index = None
-        for i, f in enumerate(files):
-            if "skip.h" in f:
-                skiped_file_index = i
-                break
-
+        skiped_file_index = next(
+            (i for i, f in enumerate(files) if "skip.h" in f), None
+        )
         for diag in report_data['diagnostics']:
             self.assertNotEqual(diag['location']['file'],
                                 skiped_file_index,
@@ -197,7 +196,7 @@ class TestSkip(unittest.TestCase):
         skip_file = os.path.join(self.test_workspace, "skipfile")
         with open(skip_file, 'w', encoding="utf-8", errors="ignore") as skip_f:
             # Include all source file dependencies.
-            skip_f.write("\n".join(["+" + s for s in source_files]))
+            skip_f.write("\n".join([f"+{s}" for s in source_files]))
 
             # Skip all other files.
             skip_f.write("-*")
@@ -226,10 +225,8 @@ class TestSkip(unittest.TestCase):
 
         # Check that we analyzed all source files which depend on the header
         # file.
-        self.assertTrue(any(["a.cpp" in f
-                             for f in report_dir_files]))
-        self.assertTrue(any(["b.cpp" in f
-                             for f in report_dir_files]))
+        self.assertTrue(any("a.cpp" in f for f in report_dir_files))
+        self.assertTrue(any("b.cpp" in f for f in report_dir_files))
 
         # Get reports only from the header file.
         out, _, _ = self.__run_parse(["--file", "*/lib.h"])

@@ -143,7 +143,7 @@ def create_compiler_info_json(old_info, filepath):
     for compiler in old_info:
         include_paths = process_includes(old_info[compiler]['includes'])
         for idx, _ in enumerate(include_paths):
-            include_paths[idx] = "-isystem %s" % include_paths[idx]
+            include_paths[idx] = f"-isystem {include_paths[idx]}"
         compiler_data = {
             "includes": include_paths,
             "target": process_target(old_info[compiler]['target']),
@@ -177,7 +177,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if not os.path.isdir(args.dir):
-        LOG.error("%s is not a directory" % args.dir)
+        LOG.error(f"{args.dir} is not a directory")
         sys.exit(1)
 
     target_file = os.path.join(args.dir, 'compiler_target.json')
@@ -222,7 +222,7 @@ if __name__ == '__main__':
 
         if not os.path.isfile(includes_file):
             # There is no 'compiler_includes.json' to match the target file.
-            LOG.error("'compiler_includes.json' not found in %s" % args.dir)
+            LOG.error(f"'compiler_includes.json' not found in {args.dir}")
             sys.exit(5)
 
         LOG.info("'compiler_[includes/target].json' files detected.")

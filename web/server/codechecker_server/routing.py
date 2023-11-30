@@ -47,10 +47,7 @@ def is_valid_product_endpoint(uripart):
         return False
 
     pattern = r'^[A-Za-z0-9_\-]+$'
-    if not re.match(pattern, uripart):
-        return False
-
-    return True
+    return bool(re.match(pattern, uripart))
 
 
 def is_supported_version(version):
@@ -90,12 +87,11 @@ def split_client_GET_request(path):
     split_path = parsed_path.split('/', 2)
 
     endpoint_part = split_path[1] if len(split_path) > 1 else None
-    if endpoint_part and is_valid_product_endpoint(endpoint_part):
-        remainder = split_path[2] if len(split_path) == 3 else ''
-        return endpoint_part, remainder
-    else:
+    if not endpoint_part or not is_valid_product_endpoint(endpoint_part):
         # The request wasn't pointing to a valid product endpoint.
         return None, parsed_path.lstrip('/')
+    remainder = split_path[2] if len(split_path) == 3 else ''
+    return endpoint_part, remainder
 
 
 def split_client_POST_request(path):

@@ -63,8 +63,7 @@ def __random_string(length: int) -> str:
     This function returns a random string of ASCII lowercase characters with
     the given length.
     """
-    return ''.join(random.choice(string.ascii_lowercase)
-                   for i in range(length))
+    return ''.join(random.choice(string.ascii_lowercase) for _ in range(length))
 
 
 def __get_toolchain_compiler(command: List[str]) -> Optional[str]:
@@ -73,8 +72,7 @@ def __get_toolchain_compiler(command: List[str]) -> Optional[str]:
     are used. This function returns the path of the GCC toolchain compiler.
     """
     for cmp_opt in command:
-        tcpath = re.match(r"^--gcc-toolchain=(?P<tcpath>.*)$", cmp_opt)
-        if tcpath:
+        if tcpath := re.match(r"^--gcc-toolchain=(?P<tcpath>.*)$", cmp_opt):
             is_cpp = '++' in command[0] or 'cpp' in command[0]
             return os.path.join(tcpath.group('tcpath'),
                                 'bin',
@@ -136,10 +134,10 @@ def __gather_dependencies(
     """
 
     def __eliminate_argument(
-        arg_vect: List[str],
-        opt_string: str,
-        has_arg=False
-    ) -> List[str]:
+            arg_vect: List[str],
+            opt_string: str,
+            has_arg=False
+        ) -> List[str]:
         """
         This call eliminates the parameters matching the given option string,
         along with its argument coming directly after the opt-string if any,
@@ -153,8 +151,7 @@ def __gather_dependencies(
             if option_index:
                 separate = 1 if has_arg and \
                     len(arg_vect[option_index]) == len(opt_string) else 0
-                arg_vect = arg_vect[0:option_index] + \
-                    arg_vect[option_index + separate + 1:]
+                arg_vect = (arg_vect[:option_index] + arg_vect[option_index + separate + 1:])
             else:
                 break
 
@@ -257,7 +254,7 @@ def __analyzer_action_hash(build_action: CompileAction) -> str:
             del args[idx]
         del args[idx]
 
-    build_info = source_file + '_' + ' '.join(args)
+    build_info = f'{source_file}_' + ' '.join(args)
 
     return hashlib.md5(build_info.encode(errors='ignore')).hexdigest()
 
@@ -454,7 +451,7 @@ def zip_tu_files(
             except KeyError:
                 pass
             else:
-                no_sources = 'no-sources_' + __random_string(5)
+                no_sources = f'no-sources_{__random_string(5)}'
 
     if error_messages:
         with zipfile.ZipFile(zip_file, write_mode) as archive:
@@ -602,13 +599,10 @@ used to generate a log file on the fly.""")
         zip_tu_files(args.zip, compilation_db, args.filter,
                      ctu_deps_dir=args.ctu_deps_dir)
         LOG.info("Done.")
+    elif deps := get_dependent_sources(compilation_db, args.filter):
+        print("\n".join(deps))
     else:
-        deps = get_dependent_sources(compilation_db, args.filter)
-
-        if deps:
-            print("\n".join(deps))
-        else:
-            LOG.info("No source file dependencies.")
+        LOG.info("No source file dependencies.")
 
 
 if __name__ == "__main__":

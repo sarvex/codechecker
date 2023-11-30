@@ -40,8 +40,7 @@ def prepare_actions(actions, enabled_analyzers):
     res = []
 
     for ea in enabled_analyzers:
-        for action in actions:
-            res.append(action.with_attr('analyzer_type', ea))
+        res.extend(action.with_attr('analyzer_type', ea) for action in actions)
     return res
 
 

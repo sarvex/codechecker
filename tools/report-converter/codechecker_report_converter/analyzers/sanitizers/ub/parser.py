@@ -158,8 +158,7 @@ class Parser(SANParser):
         stack_traces = []
 
         while self.stack_trace_re.match(line):
-            event = self.parse_stack_trace_line(line)
-            if event:
+            if event := self.parse_stack_trace_line(line):
                 events.append(event)
 
             stack_traces.append(line)

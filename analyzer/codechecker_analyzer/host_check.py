@@ -68,7 +68,7 @@ def has_analyzer_config_option(clang_bin, config_option_name):
         match = re.search(config_option_name, out)
         if match:
             LOG.debug("Config option '%s' is available.", config_option_name)
-        return (True if match else False)
+        return bool(match)
 
     except OSError:
         LOG.error('Failed to run: "%s"', ' '.join(cmd))

@@ -411,9 +411,7 @@ used to generate a log file on the fly.""")
                                     "assigned to specific directories, "
                                     "checkers, bug hashes.")
 
-    clang_has_z3 = analyzer_types.is_z3_capable()
-
-    if clang_has_z3:
+    if clang_has_z3 := analyzer_types.is_z3_capable():
         analyzer_opts.add_argument('--z3',
                                    dest='enable_z3',
                                    choices=['on', 'off'],
@@ -427,9 +425,7 @@ used to generate a log file on the fly.""")
                                         "backend is a highly experimental "
                                         "and likely unstable feature.")
 
-    clang_has_z3_refutation = analyzer_types.is_z3_refutation_capable()
-
-    if clang_has_z3_refutation:
+    if clang_has_z3_refutation := analyzer_types.is_z3_refutation_capable():
         analyzer_opts.add_argument('--z3-refutation',
                                    dest='enable_z3_refutation',
                                    choices=['on', 'off'],
@@ -808,11 +804,7 @@ def main(args):
     # the result list of a previous check. If the detection status function is
     # intended to be used (i.e. by keeping the .plist files) then the output
     # directory has to be provided explicitly.
-    if 'output_dir' in args:
-        output_dir = args.output_dir
-    else:
-        output_dir = tempfile.mkdtemp()
-
+    output_dir = args.output_dir if 'output_dir' in args else tempfile.mkdtemp()
     output_dir = os.path.abspath(output_dir)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)

@@ -6,5 +6,5 @@ def get_name():
 
 def full_name(self):
     # name is defined but not used
-    name = self.first_name + ' ' + self.last_name
+    name = f'{self.first_name} {self.last_name}'
     return self.first_name

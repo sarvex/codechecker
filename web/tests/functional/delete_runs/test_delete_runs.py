@@ -49,8 +49,6 @@ class TestCmdLineDeletion(unittest.TestCase):
         # Set the TEST_WORKSPACE used by the tests.
         os.environ['TEST_WORKSPACE'] = TEST_WORKSPACE
 
-        test_config = {}
-
         test_project = 'simple'
 
         project_info = project.get_info(test_project)
@@ -65,8 +63,7 @@ class TestCmdLineDeletion(unittest.TestCase):
         # Generate a unique name for this test run.
         test_project_name = project_info['name']
 
-        test_config['test_project'] = project_info
-
+        test_config = {'test_project': project_info}
         # Suppress file should be set here if needed by the tests.
         suppress_file = None
 
@@ -99,20 +96,15 @@ class TestCmdLineDeletion(unittest.TestCase):
         codechecker_cfg.update(server_access)
 
         for i in range(0, 5):
-            # Clean the test project, if needed by the tests.
-            ret = project.clean(test_project)
-            if ret:
+            if ret := project.clean(test_project):
                 sys.exit(ret)
 
-            # Check the test project, if needed by the tests.
-            ret = codechecker.check_and_store(codechecker_cfg,
-                                              test_project_name + '_' + str(i),
-                                              test_proj_path)
-            if ret:
+            if ret := codechecker.check_and_store(
+                codechecker_cfg, f'{test_project_name}_{str(i)}', test_proj_path
+            ):
                 sys.exit(1)
 
-            print("Analyzing the test project was successful {}."
-                  .format(str(i)))
+            print(f"Analyzing the test project was successful {str(i)}.")
 
             # If the check process is very fast, datetime of multiple runs can
             # be almost the same different in microseconds. Test cases of
@@ -121,8 +113,9 @@ class TestCmdLineDeletion(unittest.TestCase):
             time.sleep(1)
 
         # Save the run names in the configuration.
-        codechecker_cfg['run_names'] \
-            = [test_project_name + '_' + str(i) for i in range(0, 5)]
+        codechecker_cfg['run_names'] = [
+            f'{test_project_name}_{str(i)}' for i in range(0, 5)
+        ]
 
         test_config['codechecker_cfg'] = codechecker_cfg
 
@@ -140,7 +133,7 @@ class TestCmdLineDeletion(unittest.TestCase):
             'codechecker_cfg']['check_env']
         codechecker.remove_test_package_product(TEST_WORKSPACE, check_env)
 
-        print("Removing: " + TEST_WORKSPACE)
+        print(f"Removing: {TEST_WORKSPACE}")
         shutil.rmtree(TEST_WORKSPACE, ignore_errors=True)
 
     def setup_method(self, method):
@@ -148,7 +141,7 @@ class TestCmdLineDeletion(unittest.TestCase):
         test_workspace = os.environ['TEST_WORKSPACE']
 
         test_class = self.__class__.__name__
-        print('Running ' + test_class + ' tests in ' + test_workspace)
+        print(f'Running {test_class} tests in {test_workspace}')
 
         codechecker_cfg = env.import_test_cfg(test_workspace)[
             'codechecker_cfg']
@@ -205,12 +198,11 @@ class TestCmdLineDeletion(unittest.TestCase):
         check_env = self._test_config['codechecker_cfg']['check_env']
 
         project_name = self._testproject_data['name']
-        run2_name = project_name + '_' + str(2)
+        run2_name = f'{project_name}_2'
 
         # Get all 5 runs.
 
-        self.assertTrue(all_exists(
-            [project_name + '_' + str(i) for i in range(0, 5)]))
+        self.assertTrue(all_exists([f'{project_name}_{str(i)}' for i in range(0, 5)]))
 
         # Get runs after run 2 by run name.
         get_runs_cmd = [self._codechecker_cmd,
@@ -222,8 +214,10 @@ class TestCmdLineDeletion(unittest.TestCase):
         ret_runs = json.loads(out_runs)
 
         self.assertEqual(len(ret_runs), 2)
-        self.assertSetEqual({run_name for r in ret_runs for run_name in r},
-                            {project_name + '_' + str(i) for i in range(3, 5)})
+        self.assertSetEqual(
+            {run_name for r in ret_runs for run_name in r},
+            {f'{project_name}_{str(i)}' for i in range(3, 5)},
+        )
 
         self.assertEqual(get_run_count_in_config_db(), 5)
         # Remove runs after run 2 by run name.
@@ -236,10 +230,8 @@ class TestCmdLineDeletion(unittest.TestCase):
 
         self.assertEqual(get_run_count_in_config_db(), 3)
 
-        self.assertTrue(all_exists(
-            [project_name + '_' + str(i) for i in range(0, 3)]))
-        self.assertTrue(none_exists(
-            [project_name + '_' + str(i) for i in range(3, 5)]))
+        self.assertTrue(all_exists([f'{project_name}_{str(i)}' for i in range(0, 3)]))
+        self.assertTrue(none_exists([f'{project_name}_{str(i)}' for i in range(3, 5)]))
 
         # Get runs before run 2 by run date.
         run2 = [run for run in self._cc_client.getRunData(
@@ -249,13 +241,7 @@ class TestCmdLineDeletion(unittest.TestCase):
                     None) if run.name == run2_name][0]
 
         date_run2 = datetime.strptime(run2.runDate, '%Y-%m-%d %H:%M:%S.%f')
-        date_run2 = \
-            str(date_run2.year) + ':' + \
-            str(date_run2.month) + ':' + \
-            str(date_run2.day) + ':' + \
-            str(date_run2.hour) + ':' + \
-            str(date_run2.minute) + ':' + \
-            str(date_run2.second)
+        date_run2 = f'{str(date_run2.year)}:{str(date_run2.month)}:{str(date_run2.day)}:{str(date_run2.hour)}:{str(date_run2.minute)}:{str(date_run2.second)}'
 
         get_runs_cmd = [self._codechecker_cmd,
                         'cmd', 'runs',
@@ -266,8 +252,10 @@ class TestCmdLineDeletion(unittest.TestCase):
         ret_runs = json.loads(out_runs)
 
         self.assertEqual(len(ret_runs), 2)
-        self.assertSetEqual({run_name for r in ret_runs for run_name in r},
-                            {project_name + '_' + str(i) for i in range(0, 2)})
+        self.assertSetEqual(
+            {run_name for r in ret_runs for run_name in r},
+            {f'{project_name}_{str(i)}' for i in range(0, 2)},
+        )
 
         # Remove runs before run 2 by run date.
         del_cmd = [self._codechecker_cmd,
@@ -276,10 +264,12 @@ class TestCmdLineDeletion(unittest.TestCase):
                    '--url', self.server_url]
         run_cmd(del_cmd, env=check_env)
 
-        self.assertTrue(all_exists(
-            [project_name + '_' + str(2)]))
-        self.assertTrue(none_exists(
-            [project_name + '_' + str(i) for i in range(0, 5) if i != 2]))
+        self.assertTrue(all_exists([f'{project_name}_2']))
+        self.assertTrue(
+            none_exists(
+                [f'{project_name}_{str(i)}' for i in range(0, 5) if i != 2]
+            )
+        )
 
         # Remove run by run name.
 
@@ -289,7 +279,6 @@ class TestCmdLineDeletion(unittest.TestCase):
                    '--url', self.server_url]
         run_cmd(del_cmd, env=check_env)
 
-        self.assertTrue(none_exists(
-            [project_name + '_' + str(i) for i in range(0, 5)]))
+        self.assertTrue(none_exists([f'{project_name}_{str(i)}' for i in range(0, 5)]))
 
         self.assertEqual(get_run_count_in_config_db(), 0)

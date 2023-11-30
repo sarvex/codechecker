@@ -293,7 +293,7 @@ def filter_compiler_includes_extra_args(compiler_flags):
                 if val.startswith('--sysroot')), None)
     if pos is not None:
         if compiler_flags[pos] == '--sysroot':
-            extra_opts.append('--sysroot=' + compiler_flags[pos + 1])
+            extra_opts.append(f'--sysroot={compiler_flags[pos + 1]}')
         else:
             extra_opts.append(compiler_flags[pos])
 
@@ -510,19 +510,18 @@ class ImplicitCompilerInfo:
 
         standard = ""
         with tempfile.NamedTemporaryFile(
-                mode='w+',
-                suffix=('.c' if language == 'c' else '.cpp'),
-                encoding='utf-8') as source:
+                    mode='w+',
+                    suffix=('.c' if language == 'c' else '.cpp'),
+                    encoding='utf-8') as source:
 
             with source.file as f:
                 f.write(VERSION_C if language == 'c' else VERSION_CPP)
 
             err = ImplicitCompilerInfo.\
-                __get_compiler_err([compiler, source.name])
+                    __get_compiler_err([compiler, source.name])
 
             if err is not None:
-                finding = re.search('CC_FOUND_STANDARD_VER#(.+)', err)
-                if finding:
+                if finding := re.search('CC_FOUND_STANDARD_VER#(.+)', err):
                     standard = finding.group(1)
 
         if standard:
@@ -531,8 +530,8 @@ class ImplicitCompilerInfo:
                 standard = '-std=iso9899:199409'
             else:
                 standard = '-std=gnu' \
-                    + ('' if language == 'c' else '++') \
-                    + standard
+                        + ('' if language == 'c' else '++') \
+                        + standard
 
         return standard
 
@@ -680,9 +679,7 @@ def __contains_no_intrinsic_headers(dirname):
     """
     if not os.path.exists(dirname):
         return True
-    if glob.glob(os.path.join(dirname, "*intrin.h")):
-        return False
-    return True
+    return not glob.glob(os.path.join(dirname, "*intrin.h"))
 
 
 def __collect_clang_compile_opts(flag_iterator, details):
@@ -774,10 +771,7 @@ def __skip_sources(flag_iterator, _):
     This function skips the compiled source file names (i.e. the arguments
     which don't start with a dash character).
     """
-    if flag_iterator.item[0] != '-':
-        return True
-
-    return False
+    return flag_iterator.item[0] != '-'
 
 
 def __determine_action_type(flag_iterator, details):
@@ -884,10 +878,7 @@ def __skip_clang(flag_iterator, _):
     This function skips the flag pointed by the given flag_iterator with its
     parameters if any.
     """
-    if IGNORED_OPTIONS_CLANG.match(flag_iterator.item):
-        return True
-
-    return False
+    return bool(IGNORED_OPTIONS_CLANG.match(flag_iterator.item))
 
 
 def __skip_gcc(flag_iterator, _):
@@ -1022,10 +1013,9 @@ def parse_options(compilation_db_entry,
         = compiler_version_info
 
     using_same_clang_to_compile_and_analyze = False
-    compiler_clang = \
-        ImplicitCompilerInfo.compiler_versions.get(details['compiler'])
-
-    if compiler_clang:
+    if compiler_clang := ImplicitCompilerInfo.compiler_versions.get(
+        details['compiler']
+    ):
         # Based on the version information the compiler is clang.
         flag_processors = clang_flag_collectors
 
@@ -1039,10 +1029,6 @@ def parse_options(compilation_db_entry,
         for flag_processor in flag_processors:
             if flag_processor(it, details):
                 break
-        else:
-            pass
-            # print('Unhandled argument: ' + it.item)
-
     if details['action_type'] is None:
         details['action_type'] = BuildAction.COMPILE
 
@@ -1052,8 +1038,7 @@ def parse_options(compilation_db_entry,
     if details['source'] == '.':
         details['source'] = ''
 
-    lang = get_language(os.path.splitext(details['source'])[1])
-    if lang:
+    if lang := get_language(os.path.splitext(details['source'])[1]):
         if details['lang'] is None:
             details['lang'] = lang
     else:
@@ -1100,8 +1085,7 @@ def parse_options(compilation_db_entry,
         analyzer_options = iter(details['analyzer_options'])
 
         for aopt in analyzer_options:
-            m = INCLUDE_OPTIONS_MERGED.match(aopt)
-            if m:
+            if m := INCLUDE_OPTIONS_MERGED.match(aopt):
                 flag = m.group(0)
                 together = len(flag) != len(aopt)
 
@@ -1115,8 +1099,7 @@ def parse_options(compilation_db_entry,
                     if together:
                         aop_without_intrin.append(aopt)
                     else:
-                        aop_without_intrin.append(flag)
-                        aop_without_intrin.append(value)
+                        aop_without_intrin.extend((flag, value))
             else:
                 # no match
                 aop_without_intrin.append(aopt)

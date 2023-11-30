@@ -137,12 +137,13 @@ class _Session:
             transaction = None
             try:
                 transaction = self.__database()
-                record = transaction.query(SessionRecord) \
-                    .filter(SessionRecord.user_name == self.user) \
-                    .filter(SessionRecord.token == self.token) \
-                    .limit(1).one_or_none()
-
-                if record:
+                if (
+                    record := transaction.query(SessionRecord)
+                    .filter(SessionRecord.user_name == self.user)
+                    .filter(SessionRecord.token == self.token)
+                    .limit(1)
+                    .one_or_none()
+                ):
                     record.last_access = self.last_access
                     transaction.commit()
             except Exception as e:
@@ -340,10 +341,7 @@ class SessionManager:
 
         # Previously the root file doesn't contain the user name. In this case
         # we will return with no user name.
-        if len(root) <= 1:
-            return None
-
-        return root[0]
+        return None if len(root) <= 1 else root[0]
 
     def set_database_connection(self, connection):
         """
@@ -365,16 +363,13 @@ class SessionManager:
         This validation object contains two keys: username and groups.
         """
         validation = self.__try_auth_root(auth_string) \
-            or self.__try_auth_dictionary(auth_string) \
-            or self.__try_auth_pam(auth_string) \
-            or self.__try_auth_ldap(auth_string)
+                or self.__try_auth_dictionary(auth_string) \
+                or self.__try_auth_pam(auth_string) \
+                or self.__try_auth_ldap(auth_string)
         if not validation:
             return False
 
-        # If a validation method is enabled and regex_groups is enabled too,
-        # we will extend the 'groups'.
-        extra_groups = self.__try_regex_groups(validation['username'])
-        if extra_groups:
+        if extra_groups := self.__try_regex_groups(validation['username']):
             already_groups = set(validation['groups'])
             validation['groups'] = list(already_groups | extra_groups)
 
@@ -382,9 +377,11 @@ class SessionManager:
         return validation
 
     def __is_method_enabled(self, method):
-        return method not in UNSUPPORTED_METHODS and \
-            'method_' + method in self.__auth_config and \
-            self.__auth_config['method_' + method].get('enabled')
+        return (
+            method not in UNSUPPORTED_METHODS
+            and f'method_{method}' in self.__auth_config
+            and self.__auth_config[f'method_{method}'].get('enabled')
+        )
 
     def __try_auth_root(self, auth_string):
         """
@@ -413,15 +410,12 @@ class SessionManager:
             # Try the database, if it is connected.
             transaction = self.__database_connection()
             auth_session = transaction.query(SessionRecord.token) \
-                .filter(SessionRecord.user_name == user_name) \
-                .filter(SessionRecord.token == token) \
-                .filter(SessionRecord.can_expire.is_(False)) \
-                .limit(1).one_or_none()
+                    .filter(SessionRecord.user_name == user_name) \
+                    .filter(SessionRecord.token == token) \
+                    .filter(SessionRecord.can_expire.is_(False)) \
+                    .limit(1).one_or_none()
 
-            if not auth_session:
-                return False
-
-            return auth_session
+            return False if not auth_session else auth_session
         except Exception as e:
             LOG.error("Couldn't check login in the database: ")
             LOG.error(str(e))
@@ -543,11 +537,12 @@ class SessionManager:
         try:
             # Try the database, if it is connected.
             transaction = self.__database_connection()
-            session_tokens = transaction.query(SessionRecord) \
-                .filter(SessionRecord.user_name == user_name) \
-                .filter(SessionRecord.can_expire.is_(True)) \
+            return (
+                transaction.query(SessionRecord)
+                .filter(SessionRecord.user_name == user_name)
+                .filter(SessionRecord.can_expire.is_(True))
                 .all()
-            return session_tokens
+            )
         except Exception as e:
             LOG.error("Couldn't check login in the database: ")
             LOG.error(str(e))
@@ -567,10 +562,10 @@ class SessionManager:
             # Try the database, if it is connected.
             transaction = self.__database_connection()
             system_permission = transaction.query(SystemPermission) \
-                .filter(SystemPermission.name == user_name) \
-                .filter(SystemPermission.permission == SUPERUSER.name) \
-                .limit(1).one_or_none()
-            return True if system_permission else False
+                    .filter(SystemPermission.name == user_name) \
+                    .filter(SystemPermission.permission == SUPERUSER.name) \
+                    .limit(1).one_or_none()
+            return bool(system_permission)
         except Exception as e:
             LOG.error("Couldn't get system permission from database: ")
             LOG.error(str(e))
@@ -602,12 +597,10 @@ class SessionManager:
         # Perform cleanup of session memory, if neccessary.
         self.__logins_since_prune += 1
         if self.__logins_since_prune >= \
-                self.__auth_config['logins_until_cleanup']:
+                    self.__auth_config['logins_until_cleanup']:
             self.__cleanup_sessions()
 
-        # Try authenticate user with personal access token.
-        auth_token = self.__try_auth_token(auth_string)
-        if auth_token:
+        if auth_token := self.__try_auth_token(auth_string):
             local_session = self.__get_local_session_from_db(auth_token.token)
             local_session.revalidate()
             self.__sessions.append(local_session)
@@ -709,16 +702,17 @@ class SessionManager:
         transaction = None
         try:
             transaction = self.__database_connection()
-            db_record = transaction.query(SessionRecord) \
-                .filter(SessionRecord.token == token) \
-                .limit(1).one_or_none()
-
-            if db_record:
+            if (
+                db_record := transaction.query(SessionRecord)
+                .filter(SessionRecord.token == token)
+                .limit(1)
+                .one_or_none()
+            ):
                 user_name = db_record.user_name
                 is_root = self.__is_root_user(user_name)
 
                 groups = db_record.groups.split(';') \
-                    if db_record.groups else []
+                        if db_record.groups else []
 
                 return self.__create_local_session(token, user_name,
                                                    groups,

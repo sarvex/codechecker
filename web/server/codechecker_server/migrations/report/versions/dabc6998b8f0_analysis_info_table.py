@@ -92,35 +92,7 @@ def upgrade():
     else:
         # If data migration was successfully finished we can remove the
         # columns.
-        if dialect == 'sqlite':
-            # Unfortunately removing columns in SQLite is not supported.
-            # 'batch_alter_table' function can be used to remove a column here (it
-            # will create a new database) but it will clear the table which have
-            # foreign keys with cascade delete property. Unfortunately disabling
-            # the pragma foreign key doesn't work here. For this reason we will
-            # keep these columns in case of SQLite.
-
-            # with op.batch_alter_table('run_histories') as batch_op:
-            #     batch_op.drop_column('check_command')
-
-            # with op.batch_alter_table(
-            #     'runs',
-            #     reflect_args=[
-            #         # By default it we don't override the definition of this column
-            #         # we will get the following exception:
-            #         #   (sqlite3.OperationalError) default value of column
-            #         #   [can_delete] is not constant
-            #         sa.Column(
-            #             'can_delete',
-            #             sa.Boolean(),
-            #             server_default=sa.sql.true(),
-            #             nullable=False
-            #         )
-            #     ]
-            # ) as batch_op:
-            #     batch_op.drop_column('command')
-            pass
-        else:
+        if dialect != 'sqlite':
             op.drop_column('run_histories', 'check_command')
             op.drop_column('runs', 'command')
 

@@ -33,8 +33,7 @@ def main():
     labels = {}
     rgx = re.compile(r"\s+\* \[(?P<name>MD\d+)[^\]]+\]\((?P<anchor>\S+)\)")
     for line in lines:
-        m = rgx.match(line)
-        if m:
+        if m := rgx.match(line):
             checker_name = m.group("name")
             anchor = m.group("anchor")
             if checker_name not in labels:

@@ -26,7 +26,7 @@ def get_workspace(test_id='test'):
         os.makedirs(workspace_root)
 
     if test_id:
-        return tempfile.mkdtemp(prefix=test_id + "-", dir=workspace_root)
+        return tempfile.mkdtemp(prefix=f"{test_id}-", dir=workspace_root)
     else:
         return workspace_root
 
@@ -48,7 +48,7 @@ class TestMergeClangExtdefMappingsTest(unittest.TestCase):
         # and print out the path.
         global TEST_WORKSPACE
 
-        print("Removing: " + TEST_WORKSPACE)
+        print(f"Removing: {TEST_WORKSPACE}")
         shutil.rmtree(TEST_WORKSPACE)
 
     def setup_method(self, method):

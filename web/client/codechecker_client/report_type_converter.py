@@ -30,21 +30,24 @@ def to_report(
     notes: List[BugPathEvent] = []
     macro_expansions: List[MacroExpansion] = []
 
-    details = report.details
-    if details:
-        for e in details.pathEvents:
-            bug_path_events.append(BugPathEvent(
+    if details := report.details:
+        bug_path_events.extend(
+            BugPathEvent(
                 e.msg,
                 get_file(e.fileId, e.filePath),
                 e.startLine,
                 e.startCol,
-                Range(e.startLine, e.startCol, e.endLine, e.endCol)))
-
-        for p in details.executionPath:
-            bug_path_positions.append(BugPathPosition(
+                Range(e.startLine, e.startCol, e.endLine, e.endCol),
+            )
+            for e in details.pathEvents
+        )
+        bug_path_positions.extend(
+            BugPathPosition(
                 get_file(p.fileId, p.filePath),
-                Range(p.startLine, p.startCol, p.endLine, p.endCol)))
-
+                Range(p.startLine, p.startCol, p.endLine, p.endCol),
+            )
+            for p in details.executionPath
+        )
         for e in details.extendedData:
             if e.type == ExtendedReportDataType.NOTE:
                 notes.append(BugPathEvent(

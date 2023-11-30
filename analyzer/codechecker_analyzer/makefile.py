@@ -70,8 +70,7 @@ class MakeFileCreator:
     def __get_target_name(self, action):
         """ Get target name for the given action. """
         analyzer_name = self.__format_analyzer_type(action.analyzer_type)
-        target_name = analyzer_name + '_' + action.source + '_' + \
-            action.original_command
+        target_name = f'{analyzer_name}_{action.source}_{action.original_command}'
         return hashlib.md5(target_name.encode('utf-8')).hexdigest()
 
     def __write_header(self, mfile):
@@ -88,8 +87,7 @@ class MakeFileCreator:
 
     def __write_env_exports(self, mfile):
         """ Exports environment variables. """
-        data_files_dir_path = os.getenv("CC_DATA_FILES_DIR")
-        if data_files_dir_path:
+        if data_files_dir_path := os.getenv("CC_DATA_FILES_DIR"):
             bin_dir = os.getenv('CC_BIN_DIR', '')
             python3_bin = os.path.join(data_files_dir_path, 'python3', 'bin')
 
@@ -97,8 +95,7 @@ class MakeFileCreator:
                 bin_dir, python3_bin))
 
         for env_var in ["LD_LIBRARY_PATH", "PYTHONPATH", "PYTHONHOME"]:
-            value = os.getenv(env_var)
-            if value:
+            if value := os.getenv(env_var):
                 mfile.write('export {0} := {1}\n'.format(env_var, value))
 
         mfile.write('\n')
@@ -120,17 +117,13 @@ class MakeFileCreator:
 
     def __get_ctu_pre_analysis_cmds(self, action):
         """ Get CTU pre-analysis commands. """
-        cmds = []
-
         # Get architecture part of the target triple.
         triple_arch = get_triple_arch(action, action.source, self.__config)
 
         # Get command to generate PCH file.
         cmd, ast_dir = generate_ast_cmd(action, self.__config,
                                         triple_arch, action.source)
-        cmds.append('mkdir -p {0}'.format(ast_dir))
-        cmds.append(' '.join(cmd))
-
+        cmds = ['mkdir -p {0}'.format(ast_dir), ' '.join(cmd)]
         # Get command to create CTU index file.
         cmd = get_extdef_mapping_cmd(action, self.__config,
                                      action.source, self.__func_map_cmd)
@@ -150,11 +143,15 @@ class MakeFileCreator:
         # file. For this reason we do not use this option, instead redirects
         # the sed output to a temp file and overwrite the original file with
         # this file.
-        tmp_func_def_map = func_def_map + '_tmp'
-        cmds.append('sed -E "s|/(.*)|ast/\\1.ast|" {0} > {1}'.format(
-            func_def_map, tmp_func_def_map))
-        cmds.append('mv -f {0} {1}'.format(tmp_func_def_map, func_def_map))
-
+        tmp_func_def_map = f'{func_def_map}_tmp'
+        cmds.extend(
+            (
+                'sed -E "s|/(.*)|ast/\\1.ast|" {0} > {1}'.format(
+                    func_def_map, tmp_func_def_map
+                ),
+                'mv -f {0} {1}'.format(tmp_func_def_map, func_def_map),
+            )
+        )
         return cmds
 
     def __get_stats_pre_analysis_cmds(self, action):
@@ -164,7 +161,7 @@ class MakeFileCreator:
         stats_cmd, can_collect = build_stat_coll_cmd(action, self.__config,
                                                      action.source)
         if can_collect:
-            cmds.append('mkdir -p ' + self.__stat_tmp_dir)
+            cmds.append(f'mkdir -p {self.__stat_tmp_dir}')
             _, source_filename = os.path.split(action.source)
             output_id = source_filename + str(uuid.uuid4()) + '.stat'
 
@@ -189,14 +186,20 @@ class MakeFileCreator:
         commands = '\n'.join(['\t@' + c for c in pre_all_cmds])
 
         target = self.__get_target_name(action)
-        mfile.write('{0}:\n'
-                    '\t@echo "{4} Pre-analysis of {3}."\n'
-                    '{1}\n'
-                    '{2}: {0}\n\n'.format('pre_' + target,
-                                          commands,
-                                          pre_all_target,
-                                          action.source,
-                                          self.__log_info))
+        mfile.write(
+            (
+                '{0}:\n'
+                '\t@echo "{4} Pre-analysis of {3}."\n'
+                '{1}\n'
+                '{2}: {0}\n\n'.format(
+                    f'pre_{target}',
+                    commands,
+                    pre_all_target,
+                    action.source,
+                    self.__log_info,
+                )
+            )
+        )
 
     def __write_post_pre_analysis_targets(self, mfile, pre_all_target):
         """ Creates targets to post-process pre-analysis results. """
@@ -246,7 +249,7 @@ class MakeFileCreator:
         analyzer_name = self.__format_analyzer_type(action.analyzer_type)
 
         if action.analyzer_type == ClangTidy.ANALYZER_NAME:
-            analyzer_output_file = rh.analyzer_result_file + ".output"
+            analyzer_output_file = f"{rh.analyzer_result_file}.output"
             file_name = "{source_file}_{analyzer}_" + target
             report_converter_cmd = ["report-converter",
                                     "-t", "clang-tidy",
@@ -255,8 +258,8 @@ class MakeFileCreator:
                                     analyzer_output_file]
 
             command = "@{0} > {1}\n" \
-                      "\t@{2} 1>/dev/null\n" \
-                      "\t@rm -rf {1}\n".format(' '.join(analyzer_cmd),
+                          "\t@{2} 1>/dev/null\n" \
+                          "\t@rm -rf {1}\n".format(' '.join(analyzer_cmd),
                                                analyzer_output_file,
                                                ' '.join(report_converter_cmd))
         else:
@@ -279,24 +282,24 @@ class MakeFileCreator:
                  self.__makefile)
 
         with open(self.__makefile, 'w+',
-                  encoding='utf-8', errors='ignore') as mfile:
+                      encoding='utf-8', errors='ignore') as mfile:
             self.__write_header(mfile)
             self.__write_env_exports(mfile)
             self.__write_default_targets(mfile)
 
             clangsa_analyzer_name = \
-                self.__format_analyzer_type(ClangSA.ANALYZER_NAME)
-            pre_all_target = 'pre_all_' + clangsa_analyzer_name
+                    self.__format_analyzer_type(ClangSA.ANALYZER_NAME)
+            pre_all_target = f'pre_all_{clangsa_analyzer_name}'
 
             for action in actions:
-                need_pre_analysis_targets = self.__pre_analysis and \
-                    action.analyzer_type == ClangSA.ANALYZER_NAME
-
                 post_pre_all_target = ''
-                if need_pre_analysis_targets:
+                if (
+                    need_pre_analysis_targets := self.__pre_analysis
+                    and action.analyzer_type == ClangSA.ANALYZER_NAME
+                ):
                     self.__write_pre_analysis_targets(mfile, action,
                                                       pre_all_target)
-                    post_pre_all_target = 'post_' + pre_all_target
+                    post_pre_all_target = f'post_{pre_all_target}'
 
                 self.__write_analysis_targets(mfile, action,
                                               post_pre_all_target)

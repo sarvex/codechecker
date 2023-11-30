@@ -72,25 +72,19 @@ def log_and_analyze(codechecker_cfg, test_project_path, clean_project=True):
     build_json = os.path.join(codechecker_cfg['workspace'], "build.json")
 
     if clean_project:
-        ret = project.clean(test_project_path)
-        if ret:
+        if ret := project.clean(test_project_path):
             return ret
 
-    log_cmd = ['CodeChecker', 'log',
-               '-o', build_json,
-               '-b', "'" + build_cmd + "'",
-               ]
+    log_cmd = ['CodeChecker', 'log', '-o', build_json, '-b', f"'{build_cmd}'"]
 
     analyze_cmd = ['CodeChecker', 'analyze',
                    build_json,
                    '-o', codechecker_cfg['reportdir']]
 
-    suppress_file = codechecker_cfg.get('suppress_file')
-    if suppress_file:
+    if suppress_file := codechecker_cfg.get('suppress_file'):
         analyze_cmd.extend(['--suppress', suppress_file])
 
-    skip_file = codechecker_cfg.get('skip_file')
-    if skip_file:
+    if skip_file := codechecker_cfg.get('skip_file'):
         analyze_cmd.extend(['--skip', skip_file])
 
     analyze_cmd.extend(codechecker_cfg['checkers'])

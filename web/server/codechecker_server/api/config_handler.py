@@ -37,8 +37,7 @@ class ThriftConfigHandler:
         """
         Checks if the current user isn't a SUPERUSER.
         """
-        if (not (self.__auth_session is None) and
-                not self.__auth_session.is_root):
+        if self.__auth_session is not None and not self.__auth_session.is_root:
             raise codechecker_api_shared.ttypes.RequestFailed(
                 codechecker_api_shared.ttypes.ErrorCode.UNAUTHORIZED,
                 "You are not authorized to modify the notification.")

@@ -37,10 +37,7 @@ supported_analyzers = {ClangSA.ANALYZER_NAME: ClangSA,
 def is_ctu_capable():
     """ Detects if the current clang is CTU compatible. """
     enabled_analyzers, _ = check_supported_analyzers([ClangSA.ANALYZER_NAME])
-    if not enabled_analyzers:
-        return False
-
-    return ClangSA.ctu_capability().is_ctu_capable
+    return ClangSA.ctu_capability().is_ctu_capable if enabled_analyzers else False
 
 
 def is_ctu_on_demand_available():
@@ -63,11 +60,10 @@ def is_statistics_capable():
 
     stat_checkers_pattern = re.compile(r'.+statisticscollector.+')
 
-    for checker_name, _ in checkers:
-        if stat_checkers_pattern.match(checker_name):
-            return True
-
-    return False
+    return any(
+        stat_checkers_pattern.match(checker_name)
+        for checker_name, _ in checkers
+    )
 
 
 def is_z3_capable():
@@ -186,8 +182,7 @@ def check_supported_analyzers(analyzers):
         # Check version compatibility of the analyzer binary.
         if analyzer_bin:
             analyzer = supported_analyzers[analyzer_name]
-            error = analyzer.is_binary_version_incompatible(check_env)
-            if error:
+            if error := analyzer.is_binary_version_incompatible(check_env):
                 failed_analyzers.add((analyzer_name,
                                       f"Incompatible version: {error} "
                                       "Maybe try setting an absolute path to "

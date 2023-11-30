@@ -112,14 +112,12 @@ class BuildExt(build_ext):
 
 class Sdist(sdist):
     def run(self):
-        res = subprocess.call(
+        if res := subprocess.call(
             ["make", "clean_package", "package", "package_api"],
-            env=dict(os.environ,
-                     BUILD_DIR=build_dir),
+            env=dict(os.environ, BUILD_DIR=build_dir),
             encoding="utf-8",
-            errors="ignore")
-
-        if res:
+            errors="ignore",
+        ):
             sys.exit(1)
 
         init_data_files()

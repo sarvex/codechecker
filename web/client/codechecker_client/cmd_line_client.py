@@ -120,10 +120,7 @@ def get_diff_type(args) -> Union[ttypes.DiffType, None]:
     if 'unresolved' in args:
         return ttypes.DiffType.UNRESOLVED
 
-    if 'resolved' in args:
-        return ttypes.DiffType.RESOLVED
-
-    return None
+    return ttypes.DiffType.RESOLVED if 'resolved' in args else None
 
 
 def get_run_tag(client, run_ids: List[int], tag_name: str):
@@ -172,8 +169,7 @@ def process_run_args(client, run_args_with_tag: Iterable[str]):
         # Set base run tag if it is available.
         run_tag_name = run_with_tag[1] if len(run_with_tag) > 1 else None
         if run_tag_name:
-            tag = get_run_tag(client, r_ids, run_tag_name)
-            if tag:
+            if tag := get_run_tag(client, r_ids, run_tag_name):
                 run_tags.append(tag.id)
 
     return run_ids, run_names, run_tags
@@ -260,22 +256,33 @@ def skip_report_dir_result(
 
     if report_filter.checkerName:
         checker_name = report.checker_name
-        if not any([re.match(r'^' + c.replace("*", ".*") + '$',
-                             checker_name, re.IGNORECASE)
-                    for c in report_filter.checkerName]):
+        if not any(
+            re.match(
+                r'^' + c.replace("*", ".*") + '$', checker_name, re.IGNORECASE
+            )
+            for c in report_filter.checkerName
+        ):
             return True
 
     if report_filter.filepath:
-        if not any([re.match(r'^' + f.replace("*", ".*") + '$',
-                             report.file.path, re.IGNORECASE)
-                    for f in report_filter.filepath]):
+        if not any(
+            re.match(
+                r'^' + f.replace("*", ".*") + '$',
+                report.file.path,
+                re.IGNORECASE,
+            )
+            for f in report_filter.filepath
+        ):
             return True
 
     if report_filter.checkerMsg:
         checker_msg = report.message
-        if not any([re.match(r'^' + c.replace("*", ".*") + '$',
-                             checker_msg, re.IGNORECASE)
-                    for c in report_filter.checkerMsg]):
+        if not any(
+            re.match(
+                r'^' + c.replace("*", ".*") + '$', checker_msg, re.IGNORECASE
+            )
+            for c in report_filter.checkerMsg
+        ):
             return True
 
     return False
@@ -343,8 +350,9 @@ def check_run_names(client, check_names):
     if not check_names:
         return run_info
 
-    missing_names = [name for name in check_names if not run_info.get(name)]
-    if missing_names:
+    if missing_names := [
+        name for name in check_names if not run_info.get(name)
+    ]:
         LOG.warning("The following runs were not found in the database: %s.",
                     ', '.join(missing_names))
         sys.exit(1)
@@ -425,10 +433,11 @@ def validate_filter_values(converted_values: List[int], valid_values,
     if not converted_values:
         return True
 
-    non_valid_values = [status for status in converted_values
-                        if valid_values.get(status, None) is None]
-
-    if non_valid_values:
+    if non_valid_values := [
+        status
+        for status in converted_values
+        if valid_values.get(status, None) is None
+    ]:
         invalid_values = ','.join([x.lower() for x in non_valid_values])
         LOG.error('Invalid %s value(s): %s', value_type, invalid_values)
 
@@ -450,9 +459,9 @@ def parse_report_filter(client, args):
 
     if 'tag' in args:
         run_history_filter = ttypes.RunHistoryFilter(tagNames=args.tag)
-        run_histories = client.getRunHistory(None, None, None,
-                                             run_history_filter)
-        if run_histories:
+        if run_histories := client.getRunHistory(
+            None, None, None, run_history_filter
+        ):
             report_filter.runTag = [t.id for t in run_histories]
 
     return report_filter
@@ -507,8 +516,7 @@ def parse_report_filter_offline(args):
         (report_filter.reviewStatus, ttypes.ReviewStatus._VALUES_TO_NAMES,
          'review status')]
 
-    if not all(valid for valid in
-               [validate_filter_values(*x) for x in values_to_check]):
+    if not all(validate_filter_values(*x) for x in values_to_check):
         sys.exit(1)
 
     report_filter.isUnique = args.uniqueing == 'on'
@@ -542,20 +550,20 @@ def parse_report_filter_offline(args):
     if 'detected_before' in args or 'detected_after' in args:
         detected_at = ttypes.DateInterval()
 
-        if 'detected_before' in args:
-            detected_at.before = int(str_to_timestamp(args.detected_before))
+    if 'detected_before' in args:
+        detected_at.before = int(str_to_timestamp(args.detected_before))
 
-        if 'detected_after' in args:
-            detected_at.after = int(str_to_timestamp(args.detected_after))
+    if 'detected_after' in args:
+        detected_at.after = int(str_to_timestamp(args.detected_after))
 
     if 'fixed_before' in args or 'fixed_after' in args:
         fixed_at = ttypes.DateInterval()
 
-        if 'fixed_before' in args:
-            fixed_at.before = int(str_to_timestamp(args.fixed_before))
+    if 'fixed_before' in args:
+        fixed_at.before = int(str_to_timestamp(args.fixed_before))
 
-        if 'fixed_after' in args:
-            fixed_at.after = int(str_to_timestamp(args.fixed_after))
+    if 'fixed_after' in args:
+        fixed_at.after = int(str_to_timestamp(args.fixed_after))
 
     if detected_at or fixed_at:
         report_filter.date = ttypes.ReportDate(detected=detected_at,
@@ -634,9 +642,9 @@ def handle_list_runs(args):
             for analyzer in run.analyzerStatistics:
                 stat = run.analyzerStatistics[analyzer]
                 num_of_all_files = stat.successful + stat.failed
-                analyzer_statistics.append(analyzer + ' (' +
-                                           str(num_of_all_files) + '/' +
-                                           str(stat.successful) + ')')
+                analyzer_statistics.append(
+                    f'{analyzer} ({str(num_of_all_files)}/{str(stat.successful)})'
+                )
 
             codechecker_version = run.codeCheckerVersion \
                 if run.codeCheckerVersion else ''
@@ -706,7 +714,7 @@ def handle_list_results(args):
             bug_line = res.line
             checked_file = res.checkedFile
             if bug_line is not None:
-                checked_file += ' @ ' + str(bug_line)
+                checked_file += f' @ {str(bug_line)}'
 
             sev = ttypes.Severity._VALUES_TO_NAMES[res.severity]
             rw_status = \
@@ -723,7 +731,7 @@ def handle_list_results(args):
 
             # Avoid too long cell content.
             if len(msg) > max_msg_len:
-                msg = msg[:max_msg_len] + '...'
+                msg = f'{msg[:max_msg_len]}...'
 
             rows.append((checked_file, res.checkerId, sev, msg,
                          res.bugPathLength, res.analyzerName, rw_status,
@@ -743,12 +751,10 @@ def get_source_line_contents(
     for report_data in reports:
         source_lines[report_data.fileId].add(report_data.line)
 
-    lines_in_files_requested = []
-    for file_id in source_lines:
-        lines_in_files_requested.append(
-            ttypes.LinesInFilesRequested(fileId=file_id,
-                                         lines=source_lines[file_id]))
-
+    lines_in_files_requested = [
+        ttypes.LinesInFilesRequested(fileId=file_id, lines=value)
+        for file_id, value in source_lines.items()
+    ]
     return client.getLinesInSourceFileContents(
         lines_in_files_requested, ttypes.Encoding.BASE64)
 
@@ -844,24 +850,26 @@ def get_diff_local_dir_remote_run(
 
     run_ids, run_names, tag_ids = \
         process_run_args(client, remote_run_names)
-    local_report_hashes = set([r.report_hash for r in report_dir_results])
+    local_report_hashes = {r.report_hash for r in report_dir_results}
 
     review_status_filter = ttypes.ReviewStatusRuleFilter()
     review_status_filter.reportHashes = local_report_hashes
     review_status_filter.reviewStatuses = [
         ttypes.ReviewStatus.FALSE_POSITIVE,
         ttypes.ReviewStatus.INTENTIONAL]
-    closed_hashes = set(
-        rule.reportHash for rule in
-        client.getReviewStatusRules(
-            review_status_filter, None, None, None))
+    closed_hashes = {
+        rule.reportHash
+        for rule in client.getReviewStatusRules(
+            review_status_filter, None, None, None
+        )
+    }
 
     report_dir_results = [
         r for r in report_dir_results if
         r.review_status.status not in ['false_positive', 'intentional'] and
         (r.report_hash not in closed_hashes or
          r.review_status.status == 'confirmed')]
-    local_report_hashes = set(r.report_hash for r in report_dir_results)
+    local_report_hashes = {r.report_hash for r in report_dir_results}
     local_report_hashes.update(
         baseline.get_report_hashes(baseline_files) - closed_hashes)
 
@@ -941,17 +949,19 @@ def get_diff_remote_run_local_dir(
 
     run_ids, run_names, tag_ids = \
         process_run_args(client, remote_run_names)
-    local_report_hashes = set([r.report_hash for r in report_dir_results])
+    local_report_hashes = {r.report_hash for r in report_dir_results}
 
     review_status_filter = ttypes.ReviewStatusRuleFilter()
     review_status_filter.reportHashes = local_report_hashes
     review_status_filter.reviewStatuses = [
         ttypes.ReviewStatus.FALSE_POSITIVE,
         ttypes.ReviewStatus.INTENTIONAL]
-    closed_hashes = set(
-        rule.reportHash for rule in
-        client.getReviewStatusRules(
-            review_status_filter, None, None, None))
+    closed_hashes = {
+        rule.reportHash
+        for rule in client.getReviewStatusRules(
+            review_status_filter, None, None, None
+        )
+    }
 
     report_dir_results = [
         r for r in report_dir_results if
@@ -959,7 +969,7 @@ def get_diff_remote_run_local_dir(
         (r.report_hash not in closed_hashes or
          r.review_status.status == 'confirmed')]
 
-    local_report_hashes = set(r.report_hash for r in report_dir_results)
+    local_report_hashes = {r.report_hash for r in report_dir_results}
     local_report_hashes.update(
         baseline.get_report_hashes(baseline_files) - closed_hashes)
 
@@ -1033,8 +1043,7 @@ def get_diff_remote_runs(
         default_detection_status = [ttypes.DetectionStatus.NEW,
                                     ttypes.DetectionStatus.REOPENED,
                                     ttypes.DetectionStatus.UNRESOLVED]
-        if report_filter.detectionStatus != default_detection_status and \
-           report_filter.detectionStatus != []:
+        if report_filter.detectionStatus not in [default_detection_status, []]:
             LOG.warning("--detection-status is ignored when comparing tags, "
                         "showing reports regardless of detection status.")
 
@@ -1080,8 +1089,8 @@ def get_diff_local_dirs(
     new_results = [res for res in new_results
                    if res.review_status.status in statuses_str]
 
-    base_hashes = set([res.report_hash for res in base_results])
-    new_hashes = set([res.report_hash for res in new_results])
+    base_hashes = {res.report_hash for res in base_results}
+    new_hashes = {res.report_hash for res in new_results}
 
     # Add hashes from the baseline files.
     base_hashes.update(baseline.get_report_hashes(baseline_files))
@@ -1132,8 +1141,7 @@ def print_reports(
         if report.changed_files:
             changed_files.update(report.changed_files)
 
-        repo_dir = os.environ.get('CC_REPO_DIR')
-        if repo_dir:
+        if repo_dir := os.environ.get('CC_REPO_DIR'):
             report.trim_path_prefixes([repo_dir])
 
     processed_file_paths = set()
@@ -1217,13 +1225,8 @@ def print_reports(
 
 
 def handle_diff_results(args):
-    # If the given output format is not 'table', redirect logger's output to
-    # the stderr.
-    stream = None
     output_formats = args.output_format
-    if output_formats != 'table':
-        stream = 'stderr'
-
+    stream = 'stderr' if output_formats != 'table' else None
     init_logger(args.verbose if 'verbose' in args else None, stream)
 
     output_dir = args.export_dir if 'export_dir' in args else None
@@ -1403,7 +1406,7 @@ def handle_list_result_types(args):
                                            None,
                                            0)
 
-        return dict((res.name, res.count) for res in checkers)
+        return {res.name: res.count for res in checkers}
 
     def checker_count(checker_dict, key):
         return checker_dict.get(key, 0)
@@ -1425,7 +1428,7 @@ def handle_list_result_types(args):
                                            None,
                                            None,
                                            0)
-    all_checkers_dict = dict((res.name, res) for res in all_checkers)
+    all_checkers_dict = {res.name: res for res in all_checkers}
 
     unrev_checkers = get_statistics(client, run_ids, 'reviewStatus',
                                     [ttypes.ReviewStatus.UNREVIEWED])
@@ -1574,7 +1577,7 @@ def handle_suppress(args):
             suppress_data = suppress_file_handler.get_suppress_data(supp_file)
 
         for bug_id, file_name, comment, status in suppress_data:
-            file_name = '%' + file_name
+            file_name = f'%{file_name}'
             bug_hash_filter = ttypes.ReportFilter(filepath=[file_name],
                                                   reportHash=[bug_id])
             reports = client.getRunResults([run.runId], limit, 0, None,
@@ -1629,9 +1632,9 @@ def handle_list_run_histories(args):
             for analyzer in h.analyzerStatistics:
                 stat = h.analyzerStatistics[analyzer]
                 num_of_all_files = stat.successful + stat.failed
-                analyzer_statistics.append(analyzer + ' (' +
-                                           str(num_of_all_files) + '/' +
-                                           str(stat.successful) + ')')
+                analyzer_statistics.append(
+                    f'{analyzer} ({str(num_of_all_files)}/{str(stat.successful)})'
+                )
 
             rows.append((h.time,
                          h.runName,
@@ -1687,15 +1690,15 @@ def handle_import(args):
                 kind=comment['kind'])
             comment_data_list[bug_hash].append(comment_data)
 
-    # Convert Json reviews into ReviewData
-    review_data_list = {}
-    for bug_hash, review in data['reviewData'].items():
-        review_data_list[bug_hash] = ttypes.ReviewData(
+    review_data_list = {
+        bug_hash: ttypes.ReviewData(
             status=review['status'],
             comment=review['comment'],
             author=review['author'],
-            date=review['date'])
-
+            date=review['date'],
+        )
+        for bug_hash, review in data['reviewData'].items()
+    }
     exportData = ttypes.ExportData(comments=comment_data_list,
                                    reviewData=review_data_list)
 

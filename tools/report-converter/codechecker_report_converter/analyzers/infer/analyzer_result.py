@@ -60,8 +60,7 @@ class AnalyzerResult(AnalyzerResultBase):
             return reports
 
         for bug in bugs:
-            report = self.__parse_report(bug)
-            if report:
+            if report := self.__parse_report(bug):
                 reports.append(report)
 
         return reports
@@ -88,9 +87,7 @@ class AnalyzerResult(AnalyzerResultBase):
         message = bug['qualifier']
         line = int(bug['line'])
         col = int(bug['column'])
-        if col < 0:
-            col = 0
-
+        col = max(col, 0)
         source_path = self.__get_abs_path(bug['file'])
         if not source_path:
             return None
@@ -103,9 +100,7 @@ class AnalyzerResult(AnalyzerResultBase):
             bug_path_events=[])
 
         for bug_trace in bug['bug_trace']:
-            event = self.__parse_bug_trace(bug_trace)
-
-            if event:
+            if event := self.__parse_bug_trace(bug_trace):
                 report.bug_path_events.append(event)
 
         report.bug_path_events.append(BugPathEvent(
@@ -122,9 +117,7 @@ class AnalyzerResult(AnalyzerResultBase):
         message = bug_trace['description']
         line = int(bug_trace['line_number'])
         col = int(bug_trace['column_number'])
-        if col < 0:
-            col = 0
-
+        col = max(col, 0)
         return BugPathEvent(
             message,
             get_or_create_file(source_path, self.__file_cache),
