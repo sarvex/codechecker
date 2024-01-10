@@ -6,7 +6,7 @@ psutil==5.8.0
 mypy_extensions==0.4.3
 multiprocess==0.70.15
 thrift==0.13.0
-gitpython==3.1.37
+gitpython==3.1.41
 PyYAML==6.0.1
 sarif-tools==1.0.0
 
